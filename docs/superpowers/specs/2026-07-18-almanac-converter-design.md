@@ -107,15 +107,19 @@ active category, history (max 50), currency cache metadata.
 5. History (persisted, re-runnable, copyable).
 6. Copy: Enter or click copies the plain number (no thousands separators).
 7. Shareable URLs (`?q=12+km+to+mi`).
-8. Keyboard-first: typing anywhere focuses the bar; `Enter` copy; `Esc` clear;
-   `/` focus; arrow keys navigate suggestions.
-9. Precision as **significant digits** (default 6) with exponential fallback —
-   never renders a misleading `0.00`.
-10. PWA: installable, fully offline except live-rate refresh.
-11. Light/dark Almanac theme; follows `prefers-color-scheme`, manual override
-    persists.
-12. Accessibility: WCAG AA contrast, `aria-live` result announcements, real
-    label associations, full keyboard operation, `prefers-reduced-motion`.
+### Deferred to v1.1 (per user scope decision)
+8. Keyboard-first layer: typing anywhere focuses the bar; `Esc` clear; `/`
+   focus; arrow keys navigate suggestions. (v1 keeps `Enter`-to-copy only,
+   since feature 6 requires it.)
+9. Precision **settings UI**. (v1 still formats at 6 significant digits with
+   exponential fallback as the non-configurable default — never renders a
+   misleading `0.00`.)
+10. PWA: installability + service worker. (Currency's `localStorage` cache
+    from feature 3 ships in v1 regardless.)
+11. Dark "night almanac" theme + toggle. (v1 ships light Almanac only; CSS
+    uses custom properties so the dark variant drops in later.)
+12. Formal accessibility pass (AA audit, `aria-live`, reduced-motion). (v1
+    still uses semantic HTML and real label associations as baseline hygiene.)
 
 ### Explicitly out of scope (v1)
 Accounts, backend, synced history, i18n, native apps, plotting,
@@ -171,5 +175,6 @@ generic.
 2. `unit-registry` + tests → `UnitGrid` working with Almanac theme.
 3. `query-parser` + `engine` (mathjs) + `SmartBar` + `ResultCard`.
 4. Currency module + injection.
-5. History, share URLs, settings, keyboard layer.
-6. PWA (manifest, service worker), a11y pass, Playwright e2e, polish.
+5. History, share URLs, Playwright e2e, polish.
+
+(v1.1: keyboard layer, precision settings, PWA, dark theme, a11y audit.)
