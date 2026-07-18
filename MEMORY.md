@@ -8,7 +8,7 @@ Almanac Converter is a smart unit converter, live currency converter, and unit-a
 almanac-converter/
 ├── src/
 │   ├── lib/
-│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, etc.)
+│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, etc.)
 │   │   ├── currency/    # Live currency exchange rate loaders and types
 │   │   ├── engine/      # Calculation and parsing engine
 │   │   ├── stores/      # Svelte stores for settings, history, and rates
@@ -34,6 +34,7 @@ almanac-converter/
 ## Critical Information
 - Currency conversion relies on stored exchange rates loaded on mount.
 - All 160+ currency rates returned from API are injected into mathjs; conflicting names (like CUP) are registered as uppercase-only.
+- Date calculation (arithmetic, differences, weekdays) is handled entirely in vanilla JS (no external packages like moment) for light bundle footprint. A custom DatePanel.svelte renders the graphical Date tab.
 
 ## Insights
 - `loadEngine` and `loadRates` run asynchronously and in parallel, and don't block the first paint.
