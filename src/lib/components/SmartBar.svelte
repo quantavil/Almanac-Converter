@@ -5,6 +5,7 @@
 	import { recordHistory } from '$lib/stores/history';
 	import { showToast } from '$lib/stores/toast';
 	import { activeCategory, notation, precision } from '$lib/stores/settings';
+	import { copyText } from '$lib/clipboard';
 	import type { UnitRef } from '$lib/registry';
 	import ResultCard from './ResultCard.svelte';
 	import Suggestions from './Suggestions.svelte';
@@ -69,13 +70,21 @@
 
 	async function copyResult() {
 		if (!result?.ok) return;
-		await navigator.clipboard.writeText(result.value);
-		showToast('Copied to clipboard');
-		recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
+		const success = await copyText(result.value);
+		if (success) {
+			showToast('Copied to clipboard');
+			recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
+		} else {
+			showToast('Failed to copy to clipboard');
+		}
 	}
 
 	function jump(m: UnitRef | undefined) {
-		if (m) activeCategory.set(m.category.id);
+		if (m) {
+			activeCategory.set(m.category.id);
+			query = '';
+			run('');
+		}
 	}
 
 	function onKeydown(e: KeyboardEvent) {
@@ -136,7 +145,11 @@
 	/>
 	<div aria-live="polite">
 		{#if parsed.kind === 'lookup'}
-			<Suggestions matches={parsed.matches} {selected} onjump={(id) => activeCategory.set(id)} />
+			<Suggestions matches={parsed.matches} {selected} onjump={(id) => {
+				activeCategory.set(id);
+				query = '';
+				run('');
+			}} />
 		{:else if result?.ok}
 			<ResultCard value={result.value} unit={result.unit} fast={result.fast} oncopy={copyResult} />
 		{:else if result && !result.ok && result.error}

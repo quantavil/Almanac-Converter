@@ -4,6 +4,7 @@
 	import { formatNumber } from '$lib/format';
 	import { showToast } from '$lib/stores/toast';
 	import { notation, precision, pinned } from '$lib/stores/settings';
+	import { copyText } from '$lib/clipboard';
 
 	let { categoryId }: { categoryId: string } = $props();
 	let category = $derived(categories[categoryId]);
@@ -35,6 +36,7 @@
 		});
 	});
 
+	// Indian scale calculation logic or similar? No, standard convert
 	function onInput(unitId: string, raw: string) {
 		sourceId = unitId;
 		sourceRaw = raw;
@@ -52,8 +54,12 @@
 	async function copyCell(unitId: string) {
 		const v = values[unitId];
 		if (!v) return;
-		await navigator.clipboard.writeText(v);
-		showToast('Copied to clipboard');
+		const success = await copyText(v);
+		if (success) {
+			showToast('Copied to clipboard');
+		} else {
+			showToast('Failed to copy to clipboard');
+		}
 	}
 
 	function togglePin(unitId: string) {

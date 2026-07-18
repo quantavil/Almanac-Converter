@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { history, clearHistory } from '$lib/stores/history';
 	import { showToast } from '$lib/stores/toast';
+	import { copyText } from '$lib/clipboard';
 
 	let { onrerun }: { onrerun: (query: string) => void } = $props();
 
 	async function copy(text: string) {
-		await navigator.clipboard.writeText(text);
-		showToast('Copied to clipboard');
+		const success = await copyText(text);
+		if (success) {
+			showToast('Copied to clipboard');
+		} else {
+			showToast('Failed to copy to clipboard');
+		}
 	}
+
 </script>
 
 {#if $history.length}

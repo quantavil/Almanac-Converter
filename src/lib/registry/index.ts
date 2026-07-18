@@ -1,5 +1,5 @@
 import { categoryList } from './data';
-import type { Category, Unit } from './types';
+import type { Category, Unit, NonLinearUnit } from './types';
 
 export const categories: Record<string, Category> = Object.fromEntries(
 	categoryList.map((c) => [c.id, c])
@@ -7,11 +7,15 @@ export const categories: Record<string, Category> = Object.fromEntries(
 export { categoryList };
 export type { Category, Unit };
 
+function isNonLinear(u: Unit): u is NonLinearUnit {
+	return typeof u.toBase === 'function';
+}
+
 function toBase(u: Unit, v: number): number {
-	return typeof u.toBase === 'number' ? v * u.toBase : u.toBase(v);
+	return isNonLinear(u) ? u.toBase(v) : v * u.toBase;
 }
 function fromBase(u: Unit, v: number): number {
-	return typeof u.toBase === 'number' ? v / u.toBase : u.fromBase!(v);
+	return isNonLinear(u) ? u.fromBase(v) : v / u.toBase;
 }
 
 export function convert(value: number, categoryId: string, fromId: string, toId: string): number {

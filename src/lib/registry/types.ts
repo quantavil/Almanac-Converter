@@ -1,12 +1,22 @@
-export interface Unit {
+interface BaseUnit {
 	id: string;
 	name: string;
 	symbol: string;
 	aliases: string[];
-	/** number: multiply value by this to get base units. functions: non-linear. */
-	toBase: number | ((v: number) => number);
-	fromBase?: (v: number) => number; // required when toBase is a function
 }
+
+export interface LinearUnit extends BaseUnit {
+	toBase: number;
+	fromBase?: never;
+}
+
+export interface NonLinearUnit extends BaseUnit {
+	toBase: (v: number) => number;
+	fromBase: (v: number) => number;
+}
+
+export type Unit = LinearUnit | NonLinearUnit;
+
 
 export interface Category {
 	id: string;

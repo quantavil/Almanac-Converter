@@ -12,6 +12,7 @@ almanac-converter/
 │   │   ├── currency/    # Live currency exchange rate loaders and types
 │   │   ├── engine/      # Calculation and parsing engine
 │   │   ├── stores/      # Svelte stores for settings, history, and rates
+│   │   ├── clipboard.ts # Safe fallback clipboard copy helper
 │   │   ├── format.ts    # Number and unit formatting helpers
 │   ├── routes/          # SvelteKit routing (+page.svelte, +layout.svelte)
 │   ├── app.css          # Main styling sheet with light/dark variables
@@ -37,4 +38,4 @@ almanac-converter/
 - `loadEngine` and `loadRates` run asynchronously and in parallel, and don't block the first paint.
 
 ## Blunders
-None yet.
+- Hallucinated `setInterval` polling leak and mathjs `h` parsing conflict in initial audit draft. Rectified by testing behavior directly in node/bun run times before finalizing plans.

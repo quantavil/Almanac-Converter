@@ -37,7 +37,7 @@ sw.addEventListener('fetch', (event) => {
 
 	event.respondWith(
 		(async () => {
-			const cached = await caches.match(event.request);
+			const cached = await caches.match(event.request, { ignoreSearch: true });
 			if (cached) return cached;
 			try {
 				return await fetch(event.request);
