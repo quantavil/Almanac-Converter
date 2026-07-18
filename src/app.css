@@ -170,6 +170,16 @@ body {
 		width: 100%;
 		justify-content: flex-start;
 	}
+	.date-panel .panel-section {
+		padding: 14px 16px;
+	}
+	.date-range-row .field-wrap.flex-1 {
+		min-width: 0;
+	}
+	.date-range-row input[type="date"] {
+		font-size: 13px;
+		padding: 0 6px;
+	}
 }
 
 /* Date Panel Styles */

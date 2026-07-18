@@ -71,7 +71,7 @@
 <div class="date-panel">
 	<div class="panel-section">
 		<h3>Time Between Dates</h3>
-		<div class="input-row">
+		<div class="input-row date-range-row">
 			<label class="field-wrap flex-1">
 				<span class="label">Start Date</span>
 				<input type="date" bind:value={startStr} />
