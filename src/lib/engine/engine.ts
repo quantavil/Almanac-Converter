@@ -38,8 +38,11 @@ export function loadEngine(): Promise<void> {
 /** rates: currency code -> units per USD. Also updates the registry factors. */
 export function injectRates(rates: Record<string, number>): void {
 	if (!math) throw new Error('engine not loaded');
+	// only inject currencies we actually support — the API returns ~160 codes and
+	// some collide with mathjs unit names (CUP = Cuban Peso vs cup the volume unit)
+	const supported = new Set(categories.currency.units.map((u) => u.symbol));
 	for (const [code, perUsd] of Object.entries(rates)) {
-		if (code === 'USD' || !perUsd) continue;
+		if (code === 'USD' || !perUsd || !supported.has(code)) continue;
 		math.createUnit(
 			code,
 			{ definition: `${1 / perUsd} USD`, aliases: [code.toLowerCase()] },
@@ -71,7 +74,7 @@ export async function evaluateParsed(parsed: Parsed): Promise<EvalResult> {
 	// registryOnly targets can't go to mathjs
 	if (parsed.kind === 'convert') {
 		const target = findUnit(parsed.target);
-		if (target?.category.registryOnly && !parsed.fast)
+		if (target?.category.registryOnly)
 			return { ok: false, error: `Can't use ${target.unit.symbol} in expressions yet` };
 	}
 

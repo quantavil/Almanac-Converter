@@ -7,13 +7,11 @@
 	}: { matches: UnitRef[]; onjump: (categoryId: string) => void } = $props();
 </script>
 
-{#if matches.length}
-	<div class="suggestions">
-		{#each matches.slice(0, 5) as m}
-			<button onclick={() => onjump(m.category.id)}>
-				<span>Jump to <strong>{m.unit.name}</strong></span>
-				<span class="cat">{m.category.label}</span>
-			</button>
-		{/each}
-	</div>
-{/if}
+<div class="suggestions">
+	{#each matches.slice(0, 5) as m}
+		<button onclick={() => onjump(m.category.id)}>
+			<span>Jump to <strong>{m.unit.name}</strong></span>
+			<span class="cat">{m.category.label}</span>
+		</button>
+	{/each}
+</div>

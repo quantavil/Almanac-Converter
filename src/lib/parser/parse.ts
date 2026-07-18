@@ -23,8 +23,7 @@ function isUnitish(s: string): boolean {
 }
 
 export function parse(raw: string): Parsed {
-	let q = raw.trim().replace(/\s+/g, ' ').replace(/→/g, ' to ');
-	q = q.replace(/\s+/g, ' ').trim();
+	const q = raw.replace(/→/g, ' to ').replace(/\s+/g, ' ').trim();
 	if (!q) return { kind: 'empty' };
 
 	if (NUMBER_RE.test(q)) return { kind: 'number', value: parseFloat(q.replace(/,/g, '')) };

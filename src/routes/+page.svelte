@@ -13,10 +13,11 @@
 	let smartBar = $state<SmartBar | null>(null);
 
 	onMount(async () => {
-		// non-blocking: engine + rates load in background
+		// engine + rates load in parallel; neither blocks first paint
+		const engineReady = loadEngine();
 		const info = await loadRates(localStorage);
 		ratesInfo.set(info);
-		await loadEngine();
+		await engineReady;
 		injectRates(info.rates);
 	});
 </script>

@@ -42,6 +42,22 @@ describe('plain math', () => {
 		const r = await run('1250 * 1.08');
 		if (r.ok) expect(r.value).toBe('1350');
 	});
+	it('basic calculator: 2+2, sqrt, powers, factorial', async () => {
+		expect(await run('2+2')).toMatchObject({ ok: true, value: '4' });
+		expect(await run('sqrt(16)')).toMatchObject({ ok: true, value: '4' });
+		expect(await run('2^10')).toMatchObject({ ok: true, value: '1024' });
+		expect(await run('5!')).toMatchObject({ ok: true, value: '120' });
+		expect(await run('0.1 + 0.2')).toMatchObject({ ok: true, value: '0.3' });
+	});
+});
+
+describe('rate injection safety', () => {
+	it('ignores unsupported API codes that collide with mathjs units (CUP vs cup)', async () => {
+		injectRates({ USD: 1, INR: 83, CUP: 24, TRY: 33, ALL: 92 });
+		const r = await run('1 cup + 2 floz in ml');
+		expect(r.ok).toBe(true);
+		if (r.ok) expect(parseFloat(r.value)).toBeCloseTo(295.735, 2);
+	});
 });
 
 describe('errors are typed and friendly', () => {
