@@ -1,4 +1,4 @@
-import { findUnit, searchUnits, type UnitRef } from '../registry';
+import { findUnit, searchUnits, type Category, type UnitRef } from '../registry';
 
 export interface FastConvert {
 	value: number;
@@ -23,6 +23,7 @@ export type Parsed =
 	| { kind: 'empty' }
 	| { kind: 'number'; value: number }
 	| { kind: 'lookup'; query: string; matches: UnitRef[] }
+	| { kind: 'lookup_target'; expr: string; target: string; matches: UnitRef[] }
 	| { kind: 'convert'; expr: string; target: string; fast?: FastConvert }
 	| { kind: 'expression'; expr: string }
 	| DateMathParsed;
@@ -43,8 +44,58 @@ function expandScaleWords(s: string): string {
 	});
 }
 
+/** "5'10\"" / "5 ft 10 in" / "5 feet 10" -> "5 ft 10 in" for the engine to bridge. */
+function expandFeetInches(s: string): string {
+	return s
+		// symbol form: 5'10", 5′10″ — the inch mark is optional
+		.replace(/(\d+(?:\.\d+)?)\s*['′’]\s*(\d+(?:\.\d+)?)\s*["″”]?/g, '$1 ft $2 in')
+		// word form: require a space before the inches number so unit-with-digit
+		// tokens like "ft2" (square foot) aren't split into "ft 2 in". The trailing
+		// inch word (and its space) stays optional so "5 ft 10 to cm" keeps its space.
+		.replace(
+			/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|foot)\s+(\d+(?:\.\d+)?)(?:\s*(?:inches|inch|in))?\b/gi,
+			'$1 ft $2 in'
+		);
+}
+
+function expandPercentages(s: string): string {
+	let res = s;
+	res = res.replace(/(\d+(?:\.\d+)?)\s*%\s+of\s+(.+?)(?=\s+(?:to|in|as)\b|$)/gi, '($2) * ($1 / 100)');
+	const addSubRe = /([a-z0-9\s.,+\-*/^()!]+?)\s*([+-])\s*(\d+(?:\.\d+)?)\s*%(?=\s+(?:to|in|as)\b|\s*[+-]|\s*\)|$)/i;
+	while (addSubRe.test(res)) {
+		res = res.replace(addSubRe, '($1) * (1 $2 ($3 / 100))');
+	}
+	res = res.replace(/(\d+(?:\.\d+)?)\s*%/g, '($1 / 100)');
+	return res;
+}
+
+function findSourceUnit(expr: string): UnitRef | null {
+	const words = expr.trim().split(/\s+/);
+	const lastWord = words[words.length - 1];
+	if (lastWord) {
+		return findUnit(lastWord);
+	}
+	return null;
+}
+
+/** Units within one category whose name/symbol/alias contains the partial target. */
+function searchCategoryUnits(category: Category, target: string): UnitRef[] {
+	const q = target.trim().toLowerCase();
+	return category.units
+		.filter((unit) => {
+			if (!q) return true;
+			const hay = [unit.name, unit.symbol, unit.id, ...unit.aliases];
+			return hay.some((h) => h.toLowerCase().includes(q));
+		})
+		.map((unit) => ({ category, unit }));
+}
+
 export function parse(raw: string): Parsed {
-	const q = expandScaleWords(raw.replace(/→/g, ' to ')).replace(/\s+/g, ' ').trim();
+	let q = raw.replace(/→/g, ' to ');
+	q = expandFeetInches(q);
+	q = expandPercentages(q);
+	q = expandScaleWords(q).replace(/\s+/g, ' ').trim();
+
 	if (!q) return { kind: 'empty' };
 
 	const dateMath = detectDateMath(q);
@@ -52,9 +103,28 @@ export function parse(raw: string): Parsed {
 
 	if (NUMBER_RE.test(q)) return { kind: 'number', value: parseFloat(q.replace(/,/g, '')) };
 
+	// Target Autocomplete check: trailing "to/in/as" optionally followed by partial RHS.
+	const kwMatch = q.match(/\b(to|in|as)(?:\s+(.*))?$/i);
+	if (kwMatch && kwMatch.index !== undefined) {
+		const expr = q.slice(0, kwMatch.index).trim();
+		const target = (kwMatch[2] || '').trim();
+		const exactTarget = findUnit(target);
+
+		if (!exactTarget || target === '') {
+			const source = findSourceUnit(expr);
+			let matches: UnitRef[] = [];
+			if (source) {
+				matches = searchCategoryUnits(source.category, target);
+			} else if (target) {
+				matches = searchUnits(target);
+			}
+			if (matches.length || (target === '' && source)) {
+				return { kind: 'lookup_target', expr, target, matches };
+			}
+		}
+	}
+
 	// find LAST occurrence of a conversion keyword with a unit-ish RHS.
-	// Trailing space is a lookahead (not consumed) so overlapping keywords like
-	// "in in" / "in to" are both matchable and the LAST valid one wins.
 	const kw = /\s(to|in|as)(?=\s)/gi;
 	let match: RegExpExecArray | null;
 	let split: { index: number; length: number } | null = null;

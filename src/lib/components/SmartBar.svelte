@@ -5,6 +5,7 @@
 	import { recordHistory } from '$lib/stores/history';
 	import { activeCategory, notation, precision } from '$lib/stores/settings';
 	import { copyWithToast } from '$lib/clipboard';
+	import { categories } from '$lib/registry';
 	import ResultCard from './ResultCard.svelte';
 	import Suggestions from './Suggestions.svelte';
 
@@ -32,8 +33,8 @@
 	function run(q: string) {
 		parsed = parse(q);
 		clearTimeout(evalTimer);
-		if (parsed.kind === 'lookup') selected = 0;
-		if (parsed.kind === 'empty' || parsed.kind === 'lookup') {
+		if (parsed.kind === 'lookup' || parsed.kind === 'lookup_target') selected = 0;
+		if (parsed.kind === 'empty' || parsed.kind === 'lookup' || parsed.kind === 'lookup_target') {
 			result = null;
 			scheduleUrl(q, false);
 			return;
@@ -80,9 +81,34 @@
 		run('');
 	}
 
+	function swap() {
+		const p = parsed;
+		if (p.kind !== 'convert') return;
+		if (p.fast) {
+			const cat = categories[p.fast.categoryId];
+			const fromUnit = cat.units.find((u) => u.id === p.fast!.fromId);
+			const toUnit = cat.units.find((u) => u.id === p.fast!.toId);
+			if (fromUnit && toUnit) {
+				query = `${p.fast.value} ${toUnit.symbol} to ${fromUnit.symbol}`;
+				run(query);
+				inputEl?.focus();
+				return;
+			}
+		}
+		const m = p.expr.match(/^(-?[\d,]*\.?\d+)\s*(.+)$/);
+		if (m) {
+			const val = m[1];
+			const fromUnitStr = m[2].trim();
+			query = `${val} ${p.target} to ${fromUnitStr}`;
+			run(query);
+			inputEl?.focus();
+		}
+	}
+
 	function onKeydown(e: KeyboardEvent) {
-		if (parsed.kind === 'lookup' && parsed.matches.length) {
-			const n = Math.min(parsed.matches.length, 5);
+		const p = parsed;
+		if ((p.kind === 'lookup' || p.kind === 'lookup_target') && p.matches.length) {
+			const n = Math.min(p.matches.length, 5);
 			if (e.key === 'ArrowDown') {
 				e.preventDefault();
 				selected = (selected + 1) % n;
@@ -95,8 +121,16 @@
 			}
 			if (e.key === 'Enter') {
 				e.preventDefault();
-				const m = parsed.matches[selected] ?? parsed.matches[0];
-				if (m) jumpTo(m.category.id);
+				const m = p.matches[selected] ?? p.matches[0];
+				if (m) {
+					if (p.kind === 'lookup') {
+						jumpTo(m.category.id);
+					} else {
+						query = `${p.expr} to ${m.unit.symbol}`;
+						run(query);
+						inputEl?.focus();
+					}
+				}
 				return;
 			}
 		}
@@ -140,8 +174,20 @@
 	<div aria-live="polite">
 		{#if parsed.kind === 'lookup'}
 			<Suggestions matches={parsed.matches} {selected} onjump={jumpTo} />
+		{:else if parsed.kind === 'lookup_target'}
+			{@const p = parsed}
+			<Suggestions
+				matches={p.matches}
+				{selected}
+				mode="convert"
+				onselect={(m) => {
+					query = `${p.expr} to ${m.unit.symbol}`;
+					run(query);
+					inputEl?.focus();
+				}}
+			/>
 		{:else if result?.ok}
-			<ResultCard value={result.value} unit={result.unit} fast={result.fast} oncopy={copyResult} />
+			<ResultCard value={result.value} unit={result.unit} fast={result.fast} oncopy={copyResult} onswap={swap} />
 		{:else if result && !result.ok && result.error}
 			<div class="result-error">{result.error}</div>
 		{/if}

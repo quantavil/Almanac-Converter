@@ -100,3 +100,103 @@ describe('date math', () => {
 	});
 });
 
+describe('feet and inches shorthand parsing', () => {
+	it('expands smart quotes and single/double prime primes', () => {
+		expect(parse('5\'10" to cm')).toMatchObject({
+			kind: 'convert',
+			expr: '5 ft 10 in',
+			target: 'cm'
+		});
+		expect(parse('5\' 10" to cm')).toMatchObject({
+			kind: 'convert',
+			expr: '5 ft 10 in',
+			target: 'cm'
+		});
+		expect(parse('5 ft 10 to cm')).toMatchObject({
+			kind: 'convert',
+			expr: '5 ft 10 in',
+			target: 'cm'
+		});
+		expect(parse('5\'10.5"')).toMatchObject({
+			kind: 'expression',
+			expr: '5 ft 10.5 in'
+		});
+	});
+	it('does not split unit-with-digit tokens like ft2 (square foot)', () => {
+		expect(parse('10 ft2 to m2')).toMatchObject({
+			kind: 'convert',
+			expr: '10 ft2',
+			target: 'm2'
+		});
+		expect(parse('6 ft2')).toMatchObject({ kind: 'expression', expr: '6 ft2' });
+	});
+});
+
+describe('percentage idioms parsing', () => {
+	it('expands % of phrase', () => {
+		expect(parse('15% of 240')).toEqual({
+			kind: 'expression',
+			expr: '(240) * (15 / 100)'
+		});
+	});
+	it('expands percentage addition and subtraction', () => {
+		expect(parse('240 + 18%')).toEqual({
+			kind: 'expression',
+			expr: '(240) * (1 + (18 / 100))'
+		});
+		expect(parse('240 - 18%')).toEqual({
+			kind: 'expression',
+			expr: '(240) * (1 - (18 / 100))'
+		});
+	});
+	it('handles subsequent nested percentages', () => {
+		expect(parse('240 + 18% + 10%')).toEqual({
+			kind: 'expression',
+			expr: '((240) * (1 + (18 / 100))) * (1 + (10 / 100))'
+		});
+	});
+	it('handles multiplication and standalone percentages', () => {
+		expect(parse('240 * 18%')).toEqual({
+			kind: 'expression',
+			expr: '240 * (18 / 100)'
+		});
+	});
+});
+
+describe('target autocomplete parsing', () => {
+	it('detects empty target autocomplete and retrieves same-category matches', () => {
+		const p = parse('12 km to ');
+		expect(p.kind).toBe('lookup_target');
+		if (p.kind === 'lookup_target') {
+			expect(p.expr).toBe('12 km');
+			expect(p.target).toBe('');
+			expect(p.matches.length).toBeGreaterThan(0);
+			expect(p.matches[0].category.id).toBe('length');
+		}
+	});
+	it('detects partial target autocomplete and filters same-category matches', () => {
+		const p = parse('12 km to mil');
+		expect(p.kind).toBe('lookup_target');
+		if (p.kind === 'lookup_target') {
+			expect(p.expr).toBe('12 km');
+			expect(p.target).toBe('mil');
+			const names = p.matches.map(m => m.unit.name.toLowerCase());
+			expect(names).toContain('mile');
+		}
+	});
+	it('falls back to global unit search if source unit cannot be identified', () => {
+		const p = parse('1200 to usd');
+		expect(p.kind).toBe('convert'); // exact match "usd" -> kind: convert
+	});
+	it('falls back to global unit search on partial RHS if LHS has no unit', () => {
+		const p = parse('1200 to us');
+		expect(p.kind).toBe('lookup_target');
+		if (p.kind === 'lookup_target') {
+			expect(p.expr).toBe('1200');
+			expect(p.target).toBe('us');
+			const names = p.matches.map(m => m.unit.id);
+			expect(names).toContain('usd');
+		}
+	});
+});
+

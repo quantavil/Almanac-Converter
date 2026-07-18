@@ -7,12 +7,14 @@
 		value,
 		unit,
 		fast,
-		oncopy
+		oncopy,
+		onswap
 	}: {
 		value: string;
 		unit: string;
 		fast?: { categoryId: string; toId: string; raw: number };
 		oncopy: () => void;
+		onswap?: () => void;
 	} = $props();
 
 	// sibling conversions only when we know the registry category (fast path)
@@ -41,7 +43,22 @@
 	role="button"
 	tabindex="0"
 >
-	<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}</div>
+	<div class="result-header">
+		<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}</div>
+		{#if onswap}
+			<button
+				class="swap-btn"
+				onclick={(e) => {
+					e.stopPropagation();
+					onswap();
+				}}
+				title="Swap conversion direction"
+				aria-label="Swap units"
+			>
+				⇄
+			</button>
+		{/if}
+	</div>
 	{#if siblings.length}
 		<div class="siblings">
 			{#each siblings as s}
