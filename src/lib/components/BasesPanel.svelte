@@ -110,34 +110,8 @@
 </script>
 
 <div class="grid">
-	<label class="cell" class:source={sourceId === 'dec'}>
-		<span class="cell-label">Decimal (Base 10)</span>
-		<input
-			type="text"
-			inputmode="numeric"
-			placeholder="0"
-			value={values.dec}
-			oninput={(e) => onInput('dec', e.currentTarget.value)}
-		/>
-		<button class="copy" title="Copy" onclick={(e) => { e.preventDefault(); copyCell('dec'); }}>⧉</button>
-	</label>
-	
-	<label class="cell" class:source={sourceId === 'hex'}>
-		<span class="cell-label">Hexadecimal (Base 16)</span>
-		<div class="input-with-prefix">
-			<span class="prefix-badge">0x</span>
-			<input
-				type="text"
-				placeholder="0"
-				value={values.hex}
-				oninput={(e) => onInput('hex', e.currentTarget.value)}
-			/>
-		</div>
-		<button class="copy" title="Copy" onclick={(e) => { e.preventDefault(); copyCell('hex'); }}>⧉</button>
-	</label>
-
 	<label class="cell" class:source={sourceId === 'bin'}>
-		<span class="cell-label">Binary (Base 2)</span>
+		<span class="cell-label">Binary</span>
 		<div class="input-with-prefix">
 			<span class="prefix-badge">0b</span>
 			<input
@@ -151,7 +125,7 @@
 	</label>
 
 	<label class="cell" class:source={sourceId === 'oct'}>
-		<span class="cell-label">Octal (Base 8)</span>
+		<span class="cell-label">Octal</span>
 		<div class="input-with-prefix">
 			<span class="prefix-badge">0o</span>
 			<input
@@ -162,6 +136,32 @@
 			/>
 		</div>
 		<button class="copy" title="Copy" onclick={(e) => { e.preventDefault(); copyCell('oct'); }}>⧉</button>
+	</label>
+
+	<label class="cell" class:source={sourceId === 'dec'}>
+		<span class="cell-label">Decimal</span>
+		<input
+			type="text"
+			inputmode="numeric"
+			placeholder="0"
+			value={values.dec}
+			oninput={(e) => onInput('dec', e.currentTarget.value)}
+		/>
+		<button class="copy" title="Copy" onclick={(e) => { e.preventDefault(); copyCell('dec'); }}>⧉</button>
+	</label>
+	
+	<label class="cell" class:source={sourceId === 'hex'}>
+		<span class="cell-label">Hexadecimal</span>
+		<div class="input-with-prefix">
+			<span class="prefix-badge">0x</span>
+			<input
+				type="text"
+				placeholder="0"
+				value={values.hex}
+				oninput={(e) => onInput('hex', e.currentTarget.value)}
+			/>
+		</div>
+		<button class="copy" title="Copy" onclick={(e) => { e.preventDefault(); copyCell('hex'); }}>⧉</button>
 	</label>
 </div>
 
