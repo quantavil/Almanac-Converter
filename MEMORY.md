@@ -8,7 +8,7 @@ Almanac Converter is a smart unit converter, live currency converter, and unit-a
 almanac-converter/
 ├── src/
 │   ├── lib/
-│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, ResultCard, etc.)
+│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, BasesPanel, ResultCard, etc.)
 │   │   ├── registry/    # Unit categories + data, findUnit/searchUnits/convert
 │   │   ├── parser/      # parse() — classifies input (convert/expression/lookup/date_math)
 │   │   ├── engine/      # evaluateParsed — registry fast-path + lazy mathjs
