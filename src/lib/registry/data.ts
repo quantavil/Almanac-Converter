@@ -1,4 +1,5 @@
 import type { Category } from './types';
+import { FALLBACK_RATES } from '../currency/fallback';
 
 const u = (
 	id: string,
@@ -7,6 +8,15 @@ const u = (
 	toBase: number,
 	aliases: string[] = []
 ) => ({ id, name, symbol, toBase, aliases });
+
+/**
+ * Currency helper: toBase (USD per unit) is seeded from the bundled rate
+ * snapshot so the grid shows sane values before injectRates() runs live rates.
+ */
+const cur = (id: string, name: string, symbol: string, aliases: string[] = []) => {
+	const perUsd = FALLBACK_RATES.rates[symbol];
+	return u(id, name, symbol, perUsd ? 1 / perUsd : 1, aliases);
+};
 
 export const categoryList: Category[] = [
 	{
@@ -195,43 +205,43 @@ export const categoryList: Category[] = [
 		id: 'currency', label: 'Currency', group: 'Common',
 		// NOT registryOnly: currencies are linear and get registered as real mathjs
 		// units by injectRates, so they work in expressions (e.g. 12*3411 inr to usd).
-		// toBase = USD per unit; mutated at runtime by currency/applyToRegistry
+		// toBase = USD per unit; seeded from FALLBACK_RATES, refreshed by injectRates.
 		units: [
-			u('usd', 'US Dollar', 'USD', 1, ['$', 'dollar', 'dollars']),
-			u('inr', 'Indian Rupee', 'INR', 1 / 83, ['₹', 'rupee', 'rupees', 'rs']),
-			u('eur', 'Euro', 'EUR', 1 / 0.92, ['€', 'euro', 'euros']),
-			u('gbp', 'British Pound', 'GBP', 1 / 0.79, ['£', 'pound sterling']),
-			u('jpy', 'Japanese Yen', 'JPY', 1 / 150, ['¥', 'yen']),
-			u('aed', 'UAE Dirham', 'AED', 1 / 3.6725, ['dirham']),
-			u('cad', 'Canadian Dollar', 'CAD', 1 / 1.35, []),
-			u('aud', 'Australian Dollar', 'AUD', 1 / 1.52, []),
-			u('cny', 'Chinese Yuan', 'CNY', 1 / 7.2, ['yuan', 'rmb']),
-			u('chf', 'Swiss Franc', 'CHF', 1 / 0.88, ['franc']),
-			u('sgd', 'Singapore Dollar', 'SGD', 1 / 1.34, []),
-			u('hkd', 'Hong Kong Dollar', 'HKD', 1 / 7.8, []),
-			u('nzd', 'New Zealand Dollar', 'NZD', 1 / 1.65, []),
-			u('krw', 'South Korean Won', 'KRW', 1 / 1350, ['won']),
-			u('brl', 'Brazilian Real', 'BRL', 1 / 5.4, ['real']),
-			u('zar', 'South African Rand', 'ZAR', 1 / 18, ['rand']),
-			u('rub', 'Russian Ruble', 'RUB', 1 / 92, ['ruble', 'rouble']),
-			u('mxn', 'Mexican Peso', 'MXN', 1 / 18, ['peso']),
-			u('try', 'Turkish Lira', 'TRY', 1 / 33, ['lira']),
-			u('sek', 'Swedish Krona', 'SEK', 1 / 10.5, ['krona']),
-			u('nok', 'Norwegian Krone', 'NOK', 1 / 10.7, ['krone']),
-			u('dkk', 'Danish Krone', 'DKK', 1 / 6.9, []),
-			u('pln', 'Polish Zloty', 'PLN', 1 / 4, ['zloty']),
-			u('thb', 'Thai Baht', 'THB', 1 / 36, ['baht']),
-			u('idr', 'Indonesian Rupiah', 'IDR', 1 / 16000, ['rupiah']),
-			u('myr', 'Malaysian Ringgit', 'MYR', 1 / 4.7, ['ringgit']),
-			u('php', 'Philippine Peso', 'PHP', 1 / 58, []),
-			u('sar', 'Saudi Riyal', 'SAR', 1 / 3.75, ['riyal']),
-			u('pkr', 'Pakistani Rupee', 'PKR', 1 / 280, []),
-			u('bdt', 'Bangladeshi Taka', 'BDT', 1 / 118, ['taka']),
-			u('npr', 'Nepalese Rupee', 'NPR', 1 / 133, []),
-			u('lkr', 'Sri Lankan Rupee', 'LKR', 1 / 300, []),
-			u('egp', 'Egyptian Pound', 'EGP', 1 / 48, []),
-			u('ils', 'Israeli Shekel', 'ILS', 1 / 3.7, ['shekel']),
-			u('twd', 'Taiwan Dollar', 'TWD', 1 / 32, [])
+			cur('usd', 'US Dollar', 'USD', ['$', 'dollar', 'dollars']),
+			cur('inr', 'Indian Rupee', 'INR', ['₹', 'rupee', 'rupees', 'rs']),
+			cur('eur', 'Euro', 'EUR', ['€', 'euro', 'euros']),
+			cur('gbp', 'British Pound', 'GBP', ['£', 'pound sterling']),
+			cur('jpy', 'Japanese Yen', 'JPY', ['¥', 'yen']),
+			cur('aed', 'UAE Dirham', 'AED', ['dirham']),
+			cur('cad', 'Canadian Dollar', 'CAD', []),
+			cur('aud', 'Australian Dollar', 'AUD', []),
+			cur('cny', 'Chinese Yuan', 'CNY', ['yuan', 'rmb']),
+			cur('chf', 'Swiss Franc', 'CHF', ['franc']),
+			cur('sgd', 'Singapore Dollar', 'SGD', []),
+			cur('hkd', 'Hong Kong Dollar', 'HKD', []),
+			cur('nzd', 'New Zealand Dollar', 'NZD', []),
+			cur('krw', 'South Korean Won', 'KRW', ['won']),
+			cur('brl', 'Brazilian Real', 'BRL', ['real']),
+			cur('zar', 'South African Rand', 'ZAR', ['rand']),
+			cur('rub', 'Russian Ruble', 'RUB', ['ruble', 'rouble']),
+			cur('mxn', 'Mexican Peso', 'MXN', ['peso']),
+			cur('try', 'Turkish Lira', 'TRY', ['lira']),
+			cur('sek', 'Swedish Krona', 'SEK', ['krona']),
+			cur('nok', 'Norwegian Krone', 'NOK', ['krone']),
+			cur('dkk', 'Danish Krone', 'DKK', []),
+			cur('pln', 'Polish Zloty', 'PLN', ['zloty']),
+			cur('thb', 'Thai Baht', 'THB', ['baht']),
+			cur('idr', 'Indonesian Rupiah', 'IDR', ['rupiah']),
+			cur('myr', 'Malaysian Ringgit', 'MYR', ['ringgit']),
+			cur('php', 'Philippine Peso', 'PHP', []),
+			cur('sar', 'Saudi Riyal', 'SAR', ['riyal']),
+			cur('pkr', 'Pakistani Rupee', 'PKR', []),
+			cur('bdt', 'Bangladeshi Taka', 'BDT', ['taka']),
+			cur('npr', 'Nepalese Rupee', 'NPR', []),
+			cur('lkr', 'Sri Lankan Rupee', 'LKR', []),
+			cur('egp', 'Egyptian Pound', 'EGP', []),
+			cur('ils', 'Israeli Shekel', 'ILS', ['shekel']),
+			cur('twd', 'Taiwan Dollar', 'TWD', [])
 		]
 	}
 ];

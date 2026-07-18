@@ -1,67 +1,50 @@
 <script lang="ts">
+	import { addDuration, diffDaysLabel, formatLongDate, resolveDate, type DurationUnit } from '$lib/date/datemath';
+
 	// State for duration calculator
 	let startStr = $state(new Date().toISOString().slice(0, 10));
 	let endStr = $state(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
 
 	const durationResult = $derived.by(() => {
-		const d1 = new Date(startStr);
-		const d2 = new Date(endStr);
-		if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 'Invalid Dates';
-		d1.setHours(0, 0, 0, 0);
-		d2.setHours(0, 0, 0, 0);
-		const diffMs = d2.getTime() - d1.getTime();
-		const diffDays = Math.round(diffMs / 86400000);
-		const absDays = Math.abs(diffDays);
-		let label = `${absDays} ${absDays === 1 ? 'day' : 'days'}`;
-		if (absDays >= 7) {
-			const weeks = Math.floor(absDays / 7);
-			const remDays = absDays % 7;
-			label += ` (${weeks} ${weeks === 1 ? 'week' : 'weeks'}${remDays > 0 ? `, ${remDays} ${remDays === 1 ? 'day' : 'days'}` : ''})`;
-		}
-		return diffDays < 0 ? `-${label}` : label;
+		const d1 = resolveDate(startStr);
+		const d2 = resolveDate(endStr);
+		if (!d1 || !d2) return 'Invalid Dates';
+		return diffDaysLabel(d1, d2);
 	});
 
 	// State for arithmetic calculator
 	let baseStr = $state(new Date().toISOString().slice(0, 10));
 	let offsetVal = $state(1);
-	let offsetUnit = $state<'day' | 'week' | 'month' | 'year'>('day');
+	let offsetUnit = $state<DurationUnit>('day');
 	let offsetOp = $state<'+' | '-'>('+');
 
 	const arithmeticResult = $derived.by(() => {
-		const base = new Date(baseStr);
-		if (isNaN(base.getTime())) return 'Invalid Date';
-		base.setHours(0, 0, 0, 0);
-		const mult = offsetOp === '-' ? -1 : 1;
-		const result = new Date(base);
-		const val = Number(offsetVal) || 0;
-
-		if (offsetUnit === 'day') result.setDate(result.getDate() + val * mult);
-		else if (offsetUnit === 'week') result.setDate(result.getDate() + val * 7 * mult);
-		else if (offsetUnit === 'month') result.setMonth(result.getMonth() + val * mult);
-		else if (offsetUnit === 'year') result.setFullYear(result.getFullYear() + val * mult);
-
-		return result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+		const base = resolveDate(baseStr);
+		if (!base) return 'Invalid Date';
+		return formatLongDate(addDuration(base, offsetVal, offsetUnit, offsetOp));
 	});
 
-	// State for epoch converter
+	// State for epoch converter. Both directions use UTC so the displayed string
+	// round-trips back to the same timestamp regardless of the viewer's timezone.
+	const toUtcString = (ms: number) => new Date(ms).toISOString().replace('T', ' ').slice(0, 19);
+
 	let timestampStr = $state(Math.floor(Date.now() / 1000).toString());
-	let calendarStr = $state(new Date().toISOString().replace('T', ' ').slice(0, 19));
+	let calendarStr = $state(toUtcString(Date.now()));
 
 	// Dual-binding sync
 	function onTimestampInput(e: Event) {
 		const val = (e.currentTarget as HTMLInputElement).value;
 		timestampStr = val;
 		const seconds = parseInt(val);
-		if (!isNaN(seconds)) {
-			const d = new Date(seconds * 1000);
-			calendarStr = d.toISOString().replace('T', ' ').slice(0, 19);
-		}
+		if (!isNaN(seconds)) calendarStr = toUtcString(seconds * 1000);
 	}
 
 	function onCalendarInput(e: Event) {
 		const val = (e.currentTarget as HTMLInputElement).value;
 		calendarStr = val;
-		const d = new Date(val.trim());
+		// interpret the "YYYY-MM-DD HH:MM:SS" text as UTC to match how it's rendered
+		const iso = val.trim().replace(' ', 'T');
+		const d = new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z');
 		if (!isNaN(d.getTime())) {
 			timestampStr = Math.floor(d.getTime() / 1000).toString();
 		}
@@ -128,7 +111,7 @@
 				<input type="text" value={timestampStr} oninput={onTimestampInput} placeholder="e.g. 1784370200" />
 			</label>
 			<label class="field-wrap flex-1">
-				<span class="label">Calendar Date & Time (UTC/Local)</span>
+				<span class="label">Calendar Date & Time (UTC)</span>
 				<input type="text" value={calendarStr} oninput={onCalendarInput} placeholder="e.g. 2026-07-18 16:19:46" />
 			</label>
 		</div>

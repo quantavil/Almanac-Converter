@@ -1,19 +1,8 @@
 <script lang="ts">
 	import { history, clearHistory } from '$lib/stores/history';
-	import { showToast } from '$lib/stores/toast';
-	import { copyText } from '$lib/clipboard';
+	import { copyWithToast } from '$lib/clipboard';
 
 	let { onrerun }: { onrerun: (query: string) => void } = $props();
-
-	async function copy(text: string) {
-		const success = await copyText(text);
-		if (success) {
-			showToast('Copied to clipboard');
-		} else {
-			showToast('Failed to copy to clipboard');
-		}
-	}
-
 </script>
 
 {#if $history.length}
@@ -29,7 +18,7 @@
 						<span>{h.query}</span>
 						<span class="res">{h.result}</span>
 					</button>
-					<button class="copy" title="Copy result" onclick={() => copy(h.result)}>⧉</button>
+					<button class="copy" title="Copy result" onclick={() => copyWithToast(h.result)}>⧉</button>
 				</li>
 			{/each}
 		</ul>

@@ -35,7 +35,11 @@ export async function loadRates(
 		const data = await res.json();
 		if (data?.result !== 'success' || !data.rates) throw new Error('bad payload');
 		const asOf = data.time_last_update_utc ?? new Date().toUTCString();
-		storage.setItem(KEY, JSON.stringify({ rates: data.rates, ts: Date.now(), asOf }));
+		try {
+			storage.setItem(KEY, JSON.stringify({ rates: data.rates, ts: Date.now(), asOf }));
+		} catch {
+			// storage full/blocked — caching is best-effort, still use the fresh rates
+		}
 		return { rates: data.rates, asOf, stale: false };
 	} catch {
 		if (cached) return { rates: cached.rates, asOf: cached.asOf, stale: true };

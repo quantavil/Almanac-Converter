@@ -3,10 +3,8 @@
 	import { parse, type Parsed } from '$lib/parser/parse';
 	import { evaluateParsed, type EvalResult } from '$lib/engine/engine';
 	import { recordHistory } from '$lib/stores/history';
-	import { showToast } from '$lib/stores/toast';
 	import { activeCategory, notation, precision } from '$lib/stores/settings';
-	import { copyText } from '$lib/clipboard';
-	import type { UnitRef } from '$lib/registry';
+	import { copyWithToast } from '$lib/clipboard';
 	import ResultCard from './ResultCard.svelte';
 	import Suggestions from './Suggestions.svelte';
 
@@ -70,21 +68,16 @@
 
 	async function copyResult() {
 		if (!result?.ok) return;
-		const success = await copyText(result.value);
+		const success = await copyWithToast(result.value);
 		if (success) {
-			showToast('Copied to clipboard');
 			recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
-		} else {
-			showToast('Failed to copy to clipboard');
 		}
 	}
 
-	function jump(m: UnitRef | undefined) {
-		if (m) {
-			activeCategory.set(m.category.id);
-			query = '';
-			run('');
-		}
+	function jumpTo(categoryId: string) {
+		activeCategory.set(categoryId);
+		query = '';
+		run('');
 	}
 
 	function onKeydown(e: KeyboardEvent) {
@@ -102,7 +95,8 @@
 			}
 			if (e.key === 'Enter') {
 				e.preventDefault();
-				jump(parsed.matches[selected] ?? parsed.matches[0]);
+				const m = parsed.matches[selected] ?? parsed.matches[0];
+				if (m) jumpTo(m.category.id);
 				return;
 			}
 		}
@@ -145,11 +139,7 @@
 	/>
 	<div aria-live="polite">
 		{#if parsed.kind === 'lookup'}
-			<Suggestions matches={parsed.matches} {selected} onjump={(id) => {
-				activeCategory.set(id);
-				query = '';
-				run('');
-			}} />
+			<Suggestions matches={parsed.matches} {selected} onjump={jumpTo} />
 		{:else if result?.ok}
 			<ResultCard value={result.value} unit={result.unit} fast={result.fast} oncopy={copyResult} />
 		{:else if result && !result.ok && result.error}

@@ -1,6 +1,7 @@
 import { categories, convert, findUnit } from '../registry';
 import { formatNumber, type Notation } from '../format';
-import type { Parsed } from '../parser/parse';
+import type { DateMathParsed, Parsed } from '../parser/parse';
+import { addDuration, diffDaysLabel, formatLongDate, resolveDate } from '../date/datemath';
 
 export type EvalResult =
 	| { ok: true; value: string; unit: string; fast?: { categoryId: string; toId: string; raw: number } }
@@ -91,7 +92,11 @@ export async function evaluateParsed(
 			return { ok: false, error: `Can't use ${target.unit.symbol} in expressions yet` };
 	}
 
-	await loadEngine();
+	try {
+		await loadEngine();
+	} catch {
+		return { ok: false, error: 'Calculator engine failed to load — check your connection and retry' };
+	}
 	const body = bridgeCompound(parsed.expr);
 	const expr = parsed.kind === 'convert' ? `(${body}) to (${parsed.target})` : body;
 	try {
@@ -143,78 +148,27 @@ function friendly(msg: string): string {
 	return msg;
 }
 
-function resolveDate(str: string): Date | null {
-	const clean = str.trim().toLowerCase();
-	const now = new Date();
-	now.setHours(0, 0, 0, 0); // normalize time
-
-	if (clean === 'today') return now;
-	if (clean === 'tomorrow') {
-		now.setDate(now.getDate() + 1);
-		return now;
-	}
-	if (clean === 'yesterday') {
-		now.setDate(now.getDate() - 1);
-		return now;
+function evaluateDateMath(parsed: DateMathParsed): EvalResult {
+	if (parsed.subkind === 'weekday') {
+		const d = resolveDate(parsed.targetDate!);
+		if (!d) return { ok: false, error: `Invalid date: "${parsed.targetDate}"` };
+		return { ok: true, value: formatLongDate(d), unit: '' };
 	}
 
-	const parsedDate = new Date(str);
-	return isNaN(parsedDate.getTime()) ? null : parsedDate;
-}
-
-function evaluateDateMath(parsed: any): EvalResult {
-	try {
-		if (parsed.subkind === 'weekday') {
-			const d = resolveDate(parsed.targetDate);
-			if (!d) return { ok: false, error: `Invalid date: "${parsed.targetDate}"` };
-			const weekday = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-			return { ok: true, value: weekday, unit: '' };
-		}
-
-		if (parsed.subkind === 'arithmetic') {
-			const base = resolveDate(parsed.baseDate);
-			if (!base) return { ok: false, error: `Invalid date: "${parsed.baseDate}"` };
-			
-			const mult = parsed.operator === '-' ? -1 : 1;
-			const val = parsed.durationVal;
-			const unit = parsed.durationUnit;
-
-			const result = new Date(base);
-			if (unit === 'day') result.setDate(result.getDate() + val * mult);
-			else if (unit === 'week') result.setDate(result.getDate() + val * 7 * mult);
-			else if (unit === 'month') result.setMonth(result.getMonth() + val * mult);
-			else if (unit === 'year') result.setFullYear(result.getFullYear() + val * mult);
-
-			const formatted = result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-			return { ok: true, value: formatted, unit: '' };
-		}
-
-		if (parsed.subkind === 'difference') {
-			const start = resolveDate(parsed.startDate);
-			const end = resolveDate(parsed.endDate);
-			if (!start) return { ok: false, error: `Invalid date: "${parsed.startDate}"` };
-			if (!end) return { ok: false, error: `Invalid date: "${parsed.endDate}"` };
-
-			const diffMs = end.getTime() - start.getTime();
-			const diffDays = Math.round(diffMs / 86400000);
-			const absDays = Math.abs(diffDays);
-
-			let label = `${absDays} ${absDays === 1 ? 'day' : 'days'}`;
-			if (absDays >= 7) {
-				const weeks = Math.floor(absDays / 7);
-				const remDays = absDays % 7;
-				label += ` (${weeks} ${weeks === 1 ? 'week' : 'weeks'}${remDays > 0 ? `, ${remDays} ${remRemDaysUnit(remDays)}` : ''})`;
-			}
-
-			return { ok: true, value: diffDays < 0 ? `-${label}` : label, unit: '' };
-		}
-
-		return { ok: false, error: 'Unknown date math operation' };
-	} catch (e) {
-		return { ok: false, error: (e as Error).message };
+	if (parsed.subkind === 'arithmetic') {
+		const base = resolveDate(parsed.baseDate!);
+		if (!base) return { ok: false, error: `Invalid date: "${parsed.baseDate}"` };
+		const result = addDuration(base, parsed.durationVal!, parsed.durationUnit!, parsed.operator!);
+		return { ok: true, value: formatLongDate(result), unit: '' };
 	}
-}
 
-function remRemDaysUnit(remDays: number): string {
-	return remDays === 1 ? 'day' : 'days';
+	if (parsed.subkind === 'difference') {
+		const start = resolveDate(parsed.startDate!);
+		const end = resolveDate(parsed.endDate!);
+		if (!start) return { ok: false, error: `Invalid date: "${parsed.startDate}"` };
+		if (!end) return { ok: false, error: `Invalid date: "${parsed.endDate}"` };
+		return { ok: true, value: diffDaysLabel(start, end), unit: '' };
+	}
+
+	return { ok: false, error: 'Unknown date math operation' };
 }

@@ -2,9 +2,8 @@
 	import { untrack } from 'svelte';
 	import { categories, convert, type Unit } from '$lib/registry';
 	import { formatNumber } from '$lib/format';
-	import { showToast } from '$lib/stores/toast';
 	import { notation, precision, pinned } from '$lib/stores/settings';
-	import { copyText } from '$lib/clipboard';
+	import { copyWithToast } from '$lib/clipboard';
 
 	let { categoryId }: { categoryId: string } = $props();
 	let category = $derived(categories[categoryId]);
@@ -36,7 +35,6 @@
 		});
 	});
 
-	// Indian scale calculation logic or similar? No, standard convert
 	function onInput(unitId: string, raw: string) {
 		sourceId = unitId;
 		sourceRaw = raw;
@@ -51,15 +49,9 @@
 		values = next;
 	}
 
-	async function copyCell(unitId: string) {
+	function copyCell(unitId: string) {
 		const v = values[unitId];
-		if (!v) return;
-		const success = await copyText(v);
-		if (success) {
-			showToast('Copied to clipboard');
-		} else {
-			showToast('Failed to copy to clipboard');
-		}
+		if (v) copyWithToast(v);
 	}
 
 	function togglePin(unitId: string) {

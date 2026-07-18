@@ -46,7 +46,7 @@ export function findUnit(token: string): UnitRef | null {
 }
 
 /** Ranked substring search over names/symbols/aliases for the suggestions dropdown. */
-export function searchUnits(query: string, limit = 6): UnitRef[] {
+export function searchUnits(query: string, limit = 5): UnitRef[] {
 	const q = query.trim().toLowerCase();
 	if (q.length < 2) return [];
 	const scored: { ref: UnitRef; score: number }[] = [];

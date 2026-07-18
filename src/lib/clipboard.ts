@@ -1,3 +1,5 @@
+import { showToast } from './stores/toast';
+
 /**
  * Safely copies text to the clipboard, falling back to a textarea element
  * if the modern navigator.clipboard API is unavailable (e.g. in insecure HTTP contexts).
@@ -31,4 +33,11 @@ export async function copyText(text: string): Promise<boolean> {
 	}
 	document.body.removeChild(textArea);
 	return successful;
+}
+
+/** Copy and show the standard success/failure toast. */
+export async function copyWithToast(text: string): Promise<boolean> {
+	const success = await copyText(text);
+	showToast(success ? 'Copied to clipboard' : 'Failed to copy to clipboard');
+	return success;
 }

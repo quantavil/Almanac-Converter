@@ -101,11 +101,8 @@ const DURATION_RE = /^(\d+)\s*(days?|weeks?|wks?|months?|years?|yrs?)$/i;
 
 function isDateString(s: string): boolean {
 	const clean = s.trim().toLowerCase();
-	if (DATE_KEYWORD_RE.test(clean) || ISO_DATE_RE.test(clean) || WORD_DATE_RE.test(clean)) {
-		if (DATE_KEYWORD_RE.test(clean)) return true;
-		const d = new Date(clean);
-		return !isNaN(d.getTime());
-	}
+	if (DATE_KEYWORD_RE.test(clean)) return true;
+	if (ISO_DATE_RE.test(clean) || WORD_DATE_RE.test(clean)) return !isNaN(new Date(clean).getTime());
 	return false;
 }
 

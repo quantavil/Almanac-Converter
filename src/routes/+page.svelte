@@ -21,11 +21,16 @@
 	onMount(() => {
 		// engine + rates load in parallel; neither blocks first paint
 		const engineReady = loadEngine();
-		loadRates(localStorage).then(async (info) => {
-			ratesStale.set(info.stale);
-			await engineReady;
-			injectRates(info.rates);
-		});
+		loadRates(localStorage)
+			.then(async (info) => {
+				ratesStale.set(info.stale);
+				await engineReady;
+				injectRates(info.rates);
+			})
+			.catch(() => {
+				// engine import failed (offline/CDN) — the smart bar surfaces its own
+				// error on use; nothing to do here but avoid an unhandled rejection
+			});
 
 		// type-anywhere: printable keys (or "/") focus the bar and start a query
 		function onWindowKey(e: KeyboardEvent) {
