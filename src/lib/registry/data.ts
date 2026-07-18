@@ -207,7 +207,31 @@ export const categoryList: Category[] = [
 			u('aud', 'Australian Dollar', 'AUD', 1 / 1.52, []),
 			u('cny', 'Chinese Yuan', 'CNY', 1 / 7.2, ['yuan', 'rmb']),
 			u('chf', 'Swiss Franc', 'CHF', 1 / 0.88, ['franc']),
-			u('sgd', 'Singapore Dollar', 'SGD', 1 / 1.34, [])
+			u('sgd', 'Singapore Dollar', 'SGD', 1 / 1.34, []),
+			u('hkd', 'Hong Kong Dollar', 'HKD', 1 / 7.8, []),
+			u('nzd', 'New Zealand Dollar', 'NZD', 1 / 1.65, []),
+			u('krw', 'South Korean Won', 'KRW', 1 / 1350, ['won']),
+			u('brl', 'Brazilian Real', 'BRL', 1 / 5.4, ['real']),
+			u('zar', 'South African Rand', 'ZAR', 1 / 18, ['rand']),
+			u('rub', 'Russian Ruble', 'RUB', 1 / 92, ['ruble', 'rouble']),
+			u('mxn', 'Mexican Peso', 'MXN', 1 / 18, ['peso']),
+			u('try', 'Turkish Lira', 'TRY', 1 / 33, ['lira']),
+			u('sek', 'Swedish Krona', 'SEK', 1 / 10.5, ['krona']),
+			u('nok', 'Norwegian Krone', 'NOK', 1 / 10.7, ['krone']),
+			u('dkk', 'Danish Krone', 'DKK', 1 / 6.9, []),
+			u('pln', 'Polish Zloty', 'PLN', 1 / 4, ['zloty']),
+			u('thb', 'Thai Baht', 'THB', 1 / 36, ['baht']),
+			u('idr', 'Indonesian Rupiah', 'IDR', 1 / 16000, ['rupiah']),
+			u('myr', 'Malaysian Ringgit', 'MYR', 1 / 4.7, ['ringgit']),
+			u('php', 'Philippine Peso', 'PHP', 1 / 58, []),
+			u('sar', 'Saudi Riyal', 'SAR', 1 / 3.75, ['riyal']),
+			u('pkr', 'Pakistani Rupee', 'PKR', 1 / 280, []),
+			u('bdt', 'Bangladeshi Taka', 'BDT', 1 / 118, ['taka']),
+			u('npr', 'Nepalese Rupee', 'NPR', 1 / 133, []),
+			u('lkr', 'Sri Lankan Rupee', 'LKR', 1 / 300, []),
+			u('egp', 'Egyptian Pound', 'EGP', 1 / 48, []),
+			u('ils', 'Israeli Shekel', 'ILS', 1 / 3.7, ['shekel']),
+			u('twd', 'Taiwan Dollar', 'TWD', 1 / 32, [])
 		]
 	}
 ];
