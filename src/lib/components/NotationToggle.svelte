@@ -16,5 +16,5 @@
 	title="Number notation — click to cycle"
 	aria-label="Number notation: {label}. Click to cycle."
 >
-	<span class="ico" aria-hidden="true">↻</span>{label}
+	{label}
 </button>
