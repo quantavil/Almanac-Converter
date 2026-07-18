@@ -24,13 +24,20 @@ const REGIONAL_UNITS: [string, string][] = [
 
 export function loadEngine(): Promise<void> {
 	if (!loading) {
-		loading = import('mathjs').then((m) => {
-			math = m;
-			for (const [name, def] of REGIONAL_UNITS) {
-				m.createUnit(name, def, { override: true });
-			}
-			m.createUnit('USD', { aliases: ['usd'] });
-		});
+		loading = import('mathjs')
+			.then((m) => {
+				math = m;
+				for (const [name, def] of REGIONAL_UNITS) {
+					m.createUnit(name, def, { override: true });
+				}
+				m.createUnit('USD', { aliases: ['usd'] });
+			})
+			.catch((e) => {
+				// don't cache a rejected promise — a flaky CDN import would otherwise
+				// wedge the engine permanently until a full reload
+				loading = null;
+				throw e;
+			});
 	}
 	return loading;
 }
@@ -80,7 +87,8 @@ export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'
 	}
 
 	await loadEngine();
-	const expr = parsed.kind === 'convert' ? `(${parsed.expr}) to (${parsed.target})` : parsed.expr;
+	const body = bridgeCompound(parsed.expr);
+	const expr = parsed.kind === 'convert' ? `(${body}) to (${parsed.target})` : body;
 	try {
 		const r = math!.evaluate(normalizeForMath(expr));
 		if (typeof r === 'number') return { ok: true, value: formatNumber(r, notation), unit: '' };
@@ -96,11 +104,26 @@ export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'
 	}
 }
 
+/**
+ * Bridge compound units into additions so mathjs can evaluate them:
+ * "5 ft 10 in" -> "5 ft + 10 in", "1 hr 30 min" -> "1 hr + 30 min".
+ * Skips anything that already contains an operator (a real expression).
+ */
+function bridgeCompound(expr: string): string {
+	if (/[+\-*/^()!%]/.test(expr)) return expr;
+	// insert + between a unit token and a following number
+	return expr.replace(/([a-zµ°′″][\w°′″/]*)\s+(-?\d)/gi, '$1 + $2');
+}
+
 /** mathjs quirks: it knows 'in' as inch and most symbols; map a few common aliases. */
 function normalizeForMath(expr: string): string {
 	return expr
 		.replace(/\bkmph\b/gi, 'km/h')
 		.replace(/\bmph\b/gi, 'mi/h')
+		// mathjs reserves min() and mis-parses bare h/hr; spell time units out.
+		// keep the bare h in km/h · mi/h untouched, and min( ) as the function.
+		.replace(/\b(hours?|hrs?)\b/gi, 'hour')
+		.replace(/\b(minutes?|mins?)\b(?!\s*\()/gi, 'minute')
 		.replace(/°c\b/gi, 'degC')
 		.replace(/°f\b/gi, 'degF')
 		.replace(/\bcelsius\b/gi, 'degC')

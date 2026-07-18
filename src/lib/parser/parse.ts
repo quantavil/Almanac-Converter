@@ -22,8 +22,16 @@ function isUnitish(s: string): boolean {
 	return /^[a-z°µ$€£₹][a-z0-9^/°µ]*(\s*\/\s*[a-z0-9^]+)?$/i.test(s);
 }
 
+/** Indian scale words: "2 lakh" -> 200000, "1.5 crore" -> 15000000. */
+function expandScaleWords(s: string): string {
+	return s.replace(/(-?\d[\d,]*\.?\d*)\s*(lakhs?|lacs?|crores?|cr)\b/gi, (_, num: string, word: string) => {
+		const scale = /^cr/i.test(word) ? 1e7 : 1e5;
+		return String(parseFloat(num.replace(/,/g, '')) * scale);
+	});
+}
+
 export function parse(raw: string): Parsed {
-	const q = raw.replace(/→/g, ' to ').replace(/\s+/g, ' ').trim();
+	const q = expandScaleWords(raw.replace(/→/g, ' to ')).replace(/\s+/g, ' ').trim();
 	if (!q) return { kind: 'empty' };
 
 	if (NUMBER_RE.test(q)) return { kind: 'number', value: parseFloat(q.replace(/,/g, '')) };
