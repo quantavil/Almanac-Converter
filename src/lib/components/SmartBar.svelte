@@ -67,12 +67,15 @@
 		run(query);
 	}
 
+	/** Log the current result to history (deduped by pushEntry). */
+	function logResult() {
+		if (result?.ok) recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
+	}
+
 	async function copyResult() {
 		if (!result?.ok) return;
 		const success = await copyWithToast(result.value);
-		if (success) {
-			recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
-		}
+		if (success) logResult();
 	}
 
 	function jumpTo(categoryId: string) {
@@ -135,7 +138,7 @@
 			}
 		}
 		if (e.key === 'Enter') {
-			if (result?.ok) recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
+			logResult(); // record even if the clipboard copy is blocked
 			copyResult();
 		}
 		else if (e.key === 'Escape') {
