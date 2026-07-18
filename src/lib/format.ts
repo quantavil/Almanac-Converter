@@ -1,8 +1,9 @@
-export type Notation = 'auto' | 'decimal' | 'scientific' | 'engineering';
+export type Notation = 'auto' | 'decimal' | 'scientific' | 'engineering' | 'indian';
 
 export const NOTATIONS: { id: Notation; label: string }[] = [
 	{ id: 'auto', label: 'Auto' },
 	{ id: 'decimal', label: 'Decimal' },
+	{ id: 'indian', label: 'Indian' },
 	{ id: 'scientific', label: 'Scientific' },
 	{ id: 'engineering', label: 'Engineering' }
 ];
@@ -11,6 +12,7 @@ export const NOTATIONS: { id: Notation; label: string }[] = [
  * Format a number to `sig` significant digits in the requested notation.
  * auto: plain decimal inside 1e-6..1e12, exponential outside.
  * decimal: always expanded, never an exponent.
+ * indian: grouped using Indian format (lakh/crore).
  * scientific: mantissa in [1,10) × 10^e.
  * engineering: like scientific but exponent is a multiple of 3.
  */
@@ -20,6 +22,8 @@ export function formatNumber(n: number, notation: Notation = 'auto', sig = 6): s
 	switch (notation) {
 		case 'decimal':
 			return n.toLocaleString('en-US', { useGrouping: false, maximumSignificantDigits: sig });
+		case 'indian':
+			return n.toLocaleString('en-IN', { maximumSignificantDigits: sig });
 		case 'scientific': {
 			const [mantissa, exp] = n.toExponential(sig - 1).split('e');
 			return `${parseFloat(mantissa)}e${exp}`;

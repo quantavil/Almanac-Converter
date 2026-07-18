@@ -134,7 +134,10 @@
 				return;
 			}
 		}
-		if (e.key === 'Enter') copyResult();
+		if (e.key === 'Enter') {
+			if (result?.ok) recordHistory(query, `${result.value}${result.unit ? ' ' + result.unit : ''}`);
+			copyResult();
+		}
 		else if (e.key === 'Escape') {
 			query = '';
 			run('');

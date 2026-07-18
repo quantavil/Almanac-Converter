@@ -45,8 +45,12 @@ describe('formatNumber notations', () => {
 		expect(formatNumber(0.5, 'engineering')).toBe('500e-3');
 		expect(formatNumber(12345678, 'engineering')).toBe('12.3457e+6');
 	});
+	it('indian groups numbers using lakhs and crores', () => {
+		expect(formatNumber(150000, 'indian')).toBe('1,50,000');
+		expect(formatNumber(20000000, 'indian')).toBe('2,00,00,000');
+	});
 	it('all notations handle zero and non-finite', () => {
-		for (const nt of ['auto', 'decimal', 'scientific', 'engineering'] as const) {
+		for (const nt of ['auto', 'decimal', 'indian', 'scientific', 'engineering'] as const) {
 			expect(formatNumber(0, nt)).toBe('0');
 			expect(formatNumber(NaN, nt)).toBe('—');
 			expect(formatNumber(Infinity, nt)).toBe('—');

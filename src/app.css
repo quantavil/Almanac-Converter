@@ -90,6 +90,7 @@ body {
 	border-radius: 6px; padding: 16px 18px; margin-top: 10px; cursor: pointer; }
 .result-card .big { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.1;
 	font-variant-numeric: lining-nums; }
+.result-card .indian-label { font-size: 18px; color: var(--ink-soft); font-family: var(--sans); margin-left: 8px; font-weight: normal; }
 .result-card .result-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .result-card .swap-btn { background: var(--paper); border: 1px solid var(--line); border-radius: 4px;
 	width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
@@ -195,6 +196,10 @@ body {
 }
 .panel-section .field-wrap.flex-1 {
 	flex: 1;
+	min-width: 200px;
+}
+.panel-section .field-wrap.flex-2 {
+	flex: 2;
 	min-width: 200px;
 }
 .panel-section .field-wrap.base-date { flex: 2; min-width: 150px; }

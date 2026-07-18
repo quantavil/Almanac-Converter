@@ -29,6 +29,20 @@
 				value: formatNumber(convert(fast.raw, fast.categoryId, fast.toId, u.id), $notation, $precision)
 			}));
 	});
+
+	let indianLabel = $derived.by(() => {
+		if (unit !== 'INR' && unit !== '₹' && unit !== 'Rs') return '';
+		const numValue = parseFloat(value.replace(/,/g, ''));
+		if (!Number.isFinite(numValue)) return '';
+		const absVal = Math.abs(numValue);
+		if (absVal >= 1e7) {
+			return `(${formatNumber(numValue / 1e7, $notation, 4)} crore)`;
+		}
+		if (absVal >= 1e5) {
+			return `(${formatNumber(numValue / 1e5, $notation, 4)} lakh)`;
+		}
+		return '';
+	});
 </script>
 
 <div
@@ -44,7 +58,7 @@
 	tabindex="0"
 >
 	<div class="result-header">
-		<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}</div>
+		<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}{#if indianLabel}&nbsp;<span class="indian-label">{indianLabel}</span>{/if}</div>
 		{#if onswap}
 			<button
 				class="swap-btn"
