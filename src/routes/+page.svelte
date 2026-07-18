@@ -3,21 +3,42 @@
 	import SmartBar from '$lib/components/SmartBar.svelte';
 	import CategoryNav from '$lib/components/CategoryNav.svelte';
 	import NotationToggle from '$lib/components/NotationToggle.svelte';
+	import PrecisionStepper from '$lib/components/PrecisionStepper.svelte';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import UnitGrid from '$lib/components/UnitGrid.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { activeCategory } from '$lib/stores/settings';
+	import { ratesStale } from '$lib/stores/rates';
 	import { loadRates } from '$lib/currency/currency';
 	import { loadEngine, injectRates } from '$lib/engine/engine';
 
 	let smartBar = $state<SmartBar | null>(null);
 
-	onMount(async () => {
+	onMount(() => {
 		// engine + rates load in parallel; neither blocks first paint
 		const engineReady = loadEngine();
-		const info = await loadRates(localStorage);
-		await engineReady;
-		injectRates(info.rates);
+		loadRates(localStorage).then(async (info) => {
+			ratesStale.set(info.stale);
+			await engineReady;
+			injectRates(info.rates);
+		});
+
+		// type-anywhere: printable keys (or "/") focus the bar and start a query
+		function onWindowKey(e: KeyboardEvent) {
+			const t = e.target as HTMLElement | null;
+			if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
+			if (e.metaKey || e.ctrlKey || e.altKey) return;
+			if (e.key === '/') {
+				e.preventDefault();
+				smartBar?.focus();
+			} else if (e.key.length === 1 && /\S/.test(e.key)) {
+				e.preventDefault();
+				smartBar?.append(e.key);
+			}
+		}
+		window.addEventListener('keydown', onWindowKey);
+		return () => window.removeEventListener('keydown', onWindowKey);
 	});
 </script>
 
@@ -26,7 +47,11 @@
 		<h1>Almanac Converter</h1>
 		<div class="tagline">Units · Currency · Calculation</div>
 	</div>
-	<NotationToggle />
+	<div class="masthead-controls">
+		<ThemeToggle />
+		<PrecisionStepper />
+		<NotationToggle />
+	</div>
 </header>
 
 <SmartBar bind:this={smartBar} />

@@ -1,15 +1,23 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { categories, convert } from '$lib/registry';
+	import { categories, convert, type Unit } from '$lib/registry';
 	import { formatNumber } from '$lib/format';
 	import { showToast } from '$lib/stores/toast';
-	import { notation } from '$lib/stores/settings';
+	import { notation, precision, pinned } from '$lib/stores/settings';
 
 	let { categoryId }: { categoryId: string } = $props();
 	let category = $derived(categories[categoryId]);
 	let values = $state<Record<string, string>>({});
 	let sourceId = $state<string | null>(null);
-	let sourceRaw = ''; // last typed text, for notation re-renders
+	let sourceRaw = ''; // last typed text, for notation/precision re-renders
+
+	// pinned units first, in registry order; rest after
+	let orderedUnits = $derived.by<Unit[]>(() => {
+		const pins = new Set($pinned[categoryId] ?? []);
+		const pinnedUnits = category.units.filter((u) => pins.has(u.id));
+		const rest = category.units.filter((u) => !pins.has(u.id));
+		return [...pinnedUnits, ...rest];
+	});
 
 	$effect(() => {
 		categoryId; // reset when category changes
@@ -18,9 +26,10 @@
 		sourceRaw = '';
 	});
 
-	// re-render computed cells when the notation toggle changes
+	// re-render computed cells when notation or precision changes
 	$effect(() => {
 		$notation;
+		$precision;
 		untrack(() => {
 			if (sourceId && sourceRaw) onInput(sourceId, sourceRaw);
 		});
@@ -34,7 +43,7 @@
 		if (raw.trim() !== '' && !Number.isNaN(v)) {
 			for (const u of category.units) {
 				if (u.id !== unitId)
-					next[u.id] = formatNumber(convert(v, categoryId, unitId, u.id), $notation);
+					next[u.id] = formatNumber(convert(v, categoryId, unitId, u.id), $notation, $precision);
 			}
 		}
 		values = next;
@@ -46,11 +55,22 @@
 		await navigator.clipboard.writeText(v);
 		showToast('Copied to clipboard');
 	}
+
+	function togglePin(unitId: string) {
+		pinned.update((p) => {
+			const cur = new Set(p[categoryId] ?? []);
+			if (cur.has(unitId)) cur.delete(unitId);
+			else cur.add(unitId);
+			return { ...p, [categoryId]: [...cur] };
+		});
+	}
+
+	let isPinned = $derived((id: string) => ($pinned[categoryId] ?? []).includes(id));
 </script>
 
 <div class="grid">
-	{#each category.units as u (u.id)}
-		<label class="cell" class:source={sourceId === u.id}>
+	{#each orderedUnits as u (u.id)}
+		<label class="cell" class:source={sourceId === u.id} class:pinned={isPinned(u.id)}>
 			<span class="cell-label">{u.name}</span>
 			<input
 				inputmode="decimal"
@@ -58,6 +78,12 @@
 				value={values[u.id] ?? ''}
 				oninput={(e) => onInput(u.id, e.currentTarget.value)}
 			/>
+			<button
+				class="pin"
+				title={isPinned(u.id) ? 'Unpin' : 'Pin to top'}
+				aria-pressed={isPinned(u.id)}
+				onclick={(e) => { e.preventDefault(); togglePin(u.id); }}
+			>{isPinned(u.id) ? '★' : '☆'}</button>
 			<button class="copy" title="Copy" onclick={(e) => { e.preventDefault(); copyCell(u.id); }}>⧉</button>
 		</label>
 	{/each}

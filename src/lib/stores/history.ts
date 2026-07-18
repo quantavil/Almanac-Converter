@@ -16,3 +16,7 @@ export const history = persisted<HistoryEntry[]>('almanac.history.v1', []);
 export function recordHistory(query: string, result: string): void {
 	history.update((list) => pushEntry(list, { query, result, ts: Date.now() }));
 }
+
+export function clearHistory(): void {
+	history.set([]);
+}

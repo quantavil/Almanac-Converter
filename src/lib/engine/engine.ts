@@ -63,11 +63,15 @@ export function injectRates(rates: Record<string, number>): void {
 	}
 }
 
-export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'): Promise<EvalResult> {
+export async function evaluateParsed(
+	parsed: Parsed,
+	notation: Notation = 'auto',
+	precision = 6
+): Promise<EvalResult> {
 	if (parsed.kind === 'empty' || parsed.kind === 'lookup')
 		return { ok: false, error: '' };
 	if (parsed.kind === 'number')
-		return { ok: true, value: formatNumber(parsed.value, notation), unit: '' };
+		return { ok: true, value: formatNumber(parsed.value, notation, precision), unit: '' };
 
 	// registry fast path — instant, no mathjs needed
 	if (parsed.kind === 'convert' && parsed.fast) {
@@ -75,7 +79,7 @@ export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'
 		const raw = convert(value, categoryId, fromId, toId);
 		const to = categories[categoryId].units.find((x) => x.id === toId)!;
 		if (!Number.isFinite(raw)) return { ok: false, error: 'Undefined for this value' };
-		return { ok: true, value: formatNumber(raw, notation), unit: to.symbol, fast: { categoryId, toId, raw } };
+		return { ok: true, value: formatNumber(raw, notation, precision), unit: to.symbol, fast: { categoryId, toId, raw } };
 	}
 
 	// registryOnly targets (fuel economy: reciprocal/non-linear) can't be a mathjs
@@ -91,14 +95,14 @@ export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'
 	const expr = parsed.kind === 'convert' ? `(${body}) to (${parsed.target})` : body;
 	try {
 		const r = math!.evaluate(normalizeForMath(expr));
-		if (typeof r === 'number') return { ok: true, value: formatNumber(r, notation), unit: '' };
-		const formatted: string = math!.format(r, { precision: 6 });
+		if (typeof r === 'number') return { ok: true, value: formatNumber(r, notation, precision), unit: '' };
+		const formatted: string = math!.format(r, { precision });
 		const sp = formatted.indexOf(' ');
 		const valStr = sp === -1 ? formatted : formatted.slice(0, sp);
 		const unit = sp === -1 ? '' : formatted.slice(sp + 1);
 		// re-render the numeric part in the chosen notation when it parses cleanly
 		const num = Number(valStr);
-		return { ok: true, value: Number.isFinite(num) ? formatNumber(num, notation) : valStr, unit };
+		return { ok: true, value: Number.isFinite(num) ? formatNumber(num, notation, precision) : valStr, unit };
 	} catch (e) {
 		return { ok: false, error: friendly((e as Error).message) };
 	}

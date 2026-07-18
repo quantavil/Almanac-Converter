@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { categories, convert } from '$lib/registry';
 	import { formatNumber } from '$lib/format';
-	import { notation } from '$lib/stores/settings';
+	import { notation, precision } from '$lib/stores/settings';
 
 	let {
 		value,
@@ -24,7 +24,7 @@
 			.slice(0, 4)
 			.map((u) => ({
 				symbol: u.symbol,
-				value: formatNumber(convert(fast.raw, fast.categoryId, fast.toId, u.id), $notation)
+				value: formatNumber(convert(fast.raw, fast.categoryId, fast.toId, u.id), $notation, $precision)
 			}));
 	});
 </script>
@@ -39,7 +39,7 @@
 		}
 	}}
 	role="button"
-	tabindex="-1"
+	tabindex="0"
 	title="Click to copy"
 >
 	<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}</div>
