@@ -71,7 +71,8 @@ export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'
 		return { ok: true, value: formatNumber(raw, notation), unit: to.symbol, fast: { categoryId, toId, raw } };
 	}
 
-	// registryOnly targets can't go to mathjs
+	// registryOnly targets (fuel economy: reciprocal/non-linear) can't be a mathjs
+	// unit, so they're only reachable via the fast path above, never in expressions.
 	if (parsed.kind === 'convert') {
 		const target = findUnit(parsed.target);
 		if (target?.category.registryOnly)

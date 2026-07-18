@@ -35,6 +35,16 @@ describe('conversions', () => {
 		const r = await run('10 l/100km to mpg');
 		if (r.ok) expect(parseFloat(r.value)).toBeCloseTo(23.5215, 3);
 	});
+	it('currency arithmetic goes through mathjs: 12*3411 inr to usd', async () => {
+		const r = await run('12*3411 inr to usd');
+		expect(r.ok).toBe(true);
+		if (r.ok) expect(parseFloat(r.value)).toBeCloseTo((12 * 3411) / 83, 2);
+	});
+	it('fuel economy is still blocked in expressions (non-linear)', async () => {
+		const r = await run('10*2 l/100km to mpg');
+		expect(r.ok).toBe(false);
+		if (!r.ok) expect(r.error).toMatch(/expressions yet/);
+	});
 });
 
 describe('plain math', () => {

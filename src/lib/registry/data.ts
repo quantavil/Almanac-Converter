@@ -192,7 +192,9 @@ export const categoryList: Category[] = [
 		]
 	},
 	{
-		id: 'currency', label: 'Currency', group: 'Common', registryOnly: true,
+		id: 'currency', label: 'Currency', group: 'Common',
+		// NOT registryOnly: currencies are linear and get registered as real mathjs
+		// units by injectRates, so they work in expressions (e.g. 12*3411 inr to usd).
 		// toBase = USD per unit; mutated at runtime by currency/applyToRegistry
 		units: [
 			u('usd', 'US Dollar', 'USD', 1, ['$', 'dollar', 'dollars']),
