@@ -9,6 +9,10 @@ statically prerendered, installable PWA with no backend.
 - **Smart bar** — `12 km to mi`, `5 ft 10 in to cm`, `2 lakh inr to usd`,
   `15% of 240`, `1250 * 1.08`, `sqrt(16)`. Live results as you type, with a
   swap button (⇄) to flip direction and unit autocomplete after `to`.
+- **Compound-unit math** — `100 km / 2 h to mph`, `60 W * 3 h to kWh`; full
+  unit algebra through the lazy math engine.
+- **Multi-target** — `10 km to mi, ft, m` stacks every target in one card.
+- **Number bases** — `255 to hex, bin, oct`, `0xff to dec`, `0b1010 to hex/dec`.
 - **Type-once-fill-all grid** — 16 categories including regional units
   (bigha, tola, gaj, maund…). Pin favourites to the top.
 - **Live currency** — 35 currencies in the grid (160+ recognised in the smart

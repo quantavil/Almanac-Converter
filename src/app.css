@@ -100,6 +100,11 @@ body {
 .result-card .siblings { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .result-card .sib { background: var(--paper); border: 1px solid var(--line); border-radius: 4px;
 	padding: 4px 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.result-card.multi-card { display: flex; flex-direction: column; gap: 6px; }
+.result-card .multi-row { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15;
+	font-variant-numeric: lining-nums; }
+.result-card .multi-row .num { color: var(--rust); }
+.result-card .multi-row.multi-err { font-family: var(--sans); font-weight: normal; font-size: 13px; color: var(--ink-soft); }
 .result-error { color: var(--ink-soft); font-size: 13px; margin-top: 10px; padding-left: 4px; }
 
 /* Suggestions */

@@ -16,7 +16,8 @@
 				<li>
 					<button class="entry" onclick={() => onrerun(h.query)} title="Re-run">
 						<span>{h.query}</span>
-						<span class="res">{h.result}</span>
+						<!-- multi-target results are stored newline-joined; render inline -->
+						<span class="res">{h.result.replace(/\n/g, ' · ')}</span>
 					</button>
 					<button class="copy" title="Copy result" onclick={() => copyWithToast(h.result)}>⧉</button>
 				</li>

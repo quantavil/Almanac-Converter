@@ -163,6 +163,43 @@ describe('percentage idioms parsing', () => {
 	});
 });
 
+describe('multi-target parsing', () => {
+	it('splits a comma-separated target list', () => {
+		const p = parse('10 km to mi, ft, m');
+		expect(p.kind).toBe('convert_multi');
+		if (p.kind === 'convert_multi') {
+			expect(p.expr).toBe('10 km');
+			expect(p.targets).toEqual(['mi', 'ft', 'm']);
+			expect(p.fasts.every((f) => f && f.categoryId === 'length')).toBe(true);
+		}
+	});
+	it('a single target after a comma collapses to a normal convert', () => {
+		expect(parse('10 km to mi,').kind).toBe('convert');
+	});
+});
+
+describe('base conversion parsing', () => {
+	it('decimal to hex', () => {
+		expect(parse('255 to hex')).toEqual({ kind: 'base', value: 255, targets: ['hex'] });
+	});
+	it('hex literal to decimal', () => {
+		expect(parse('0xff to dec')).toEqual({ kind: 'base', value: 255, targets: ['dec'] });
+	});
+	it('accepts comma and slash separated base lists, dropping duplicates', () => {
+		expect(parse('255 to hex, bin, oct')).toMatchObject({ targets: ['hex', 'bin', 'oct'] });
+		expect(parse('0b1010 to hex/dec')).toMatchObject({ value: 10, targets: ['hex', 'dec'] });
+	});
+	it('accepts comma-grouped decimals', () => {
+		expect(parse('1,000 to hex')).toEqual({ kind: 'base', value: 1000, targets: ['hex'] });
+	});
+	it('a non-base target is not a base conversion', () => {
+		expect(parse('255 to mi').kind).not.toBe('base');
+	});
+	it('rejects literals beyond 2^53 instead of silently rounding', () => {
+		expect(parse('0xffffffffffffffff to dec').kind).not.toBe('base');
+	});
+});
+
 describe('target autocomplete parsing', () => {
 	it('detects empty target autocomplete and retrieves same-category matches', () => {
 		const p = parse('12 km to ');

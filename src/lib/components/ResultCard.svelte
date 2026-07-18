@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { categories, convert } from '$lib/registry';
+	import type { MultiRow } from '$lib/engine/engine';
 	import { formatNumber } from '$lib/format';
 	import { notation, precision } from '$lib/stores/settings';
 
 	let {
 		value,
 		unit,
+		multi,
 		fast,
 		oncopy,
 		onswap
 	}: {
 		value: string;
 		unit: string;
+		multi?: MultiRow[];
 		fast?: { categoryId: string; toId: string; raw: number };
 		oncopy: () => void;
 		onswap?: () => void;
@@ -47,6 +50,7 @@
 
 <div
 	class="result-card"
+	class:multi-card={multi}
 	onclick={oncopy}
 	onkeydown={(e) => {
 		if (e.key === 'Enter' || e.key === ' ') {
@@ -57,27 +61,37 @@
 	role="button"
 	tabindex="0"
 >
-	<div class="result-header">
-		<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}{#if indianLabel}&nbsp;<span class="indian-label">{indianLabel}</span>{/if}</div>
-		{#if onswap}
-			<button
-				class="swap-btn"
-				onclick={(e) => {
-					e.stopPropagation();
-					onswap();
-				}}
-				title="Swap conversion direction"
-				aria-label="Swap units"
-			>
-				⇄
-			</button>
-		{/if}
-	</div>
-	{#if siblings.length}
-		<div class="siblings">
-			{#each siblings as s}
-				<span class="sib">{s.value} {s.symbol}</span>
-			{/each}
+	{#if multi}
+		{#each multi as row}
+			{#if row.error}
+				<div class="multi-row multi-err">{row.error}</div>
+			{:else}
+				<div class="multi-row big"><span class="num">{row.value}</span>{#if row.unit}&nbsp;{row.unit}{/if}</div>
+			{/if}
+		{/each}
+	{:else}
+		<div class="result-header">
+			<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}{#if indianLabel}&nbsp;<span class="indian-label">{indianLabel}</span>{/if}</div>
+			{#if onswap}
+				<button
+					class="swap-btn"
+					onclick={(e) => {
+						e.stopPropagation();
+						onswap();
+					}}
+					title="Swap conversion direction"
+					aria-label="Swap units"
+				>
+					⇄
+				</button>
+			{/if}
 		</div>
+		{#if siblings.length}
+			<div class="siblings">
+				{#each siblings as s}
+					<span class="sib">{s.value} {s.symbol}</span>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </div>

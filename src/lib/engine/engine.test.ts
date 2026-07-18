@@ -47,6 +47,54 @@ describe('conversions', () => {
 	});
 });
 
+describe('compound-unit math', () => {
+	it('100 km / 2 h to mph', async () => {
+		const r = await run('100 km / 2 h to mph');
+		expect(r.ok).toBe(true);
+		if (r.ok) expect(parseFloat(r.value)).toBeCloseTo(31.0686, 3);
+	});
+	it('60 W * 3 h to kWh', async () => {
+		const r = await run('60 W * 3 h to kWh');
+		if (r.ok) expect(parseFloat(r.value)).toBeCloseTo(0.18, 4);
+	});
+});
+
+describe('multi-target conversion', () => {
+	it('10 km to mi, ft, m returns a row per target', async () => {
+		const r = await run('10 km to mi, ft, m');
+		expect(r.ok).toBe(true);
+		if (r.ok && r.multi) {
+			expect(r.multi.map((m) => m.unit)).toEqual(['mi', 'ft', 'm']);
+			expect(parseFloat(r.multi[0].value)).toBeCloseTo(6.21371, 4);
+			expect(r.value).toContain('\n');
+		}
+	});
+	it('a mismatched target yields an error row, not a failure', async () => {
+		const r = await run('10 km to mi, kg');
+		expect(r.ok).toBe(true);
+		if (r.ok && r.multi) {
+			expect(r.multi[0].unit).toBe('mi');
+			expect(r.multi[1].error).toBeTruthy();
+		}
+	});
+	it('all targets failing collapses to a single error', async () => {
+		const r = await run('12 zzz to mi, ft');
+		expect(r.ok).toBe(false);
+		if (!r.ok) expect(r.error).toMatch(/zzz/);
+	});
+});
+
+describe('base conversion', () => {
+	it('255 to hex, bin, oct', async () => {
+		const r = await run('255 to hex, bin, oct');
+		if (r.ok && r.multi) expect(r.multi.map((m) => m.value)).toEqual(['0xff', '0b11111111', '0o377']);
+	});
+	it('0xff to dec', async () => {
+		const r = await run('0xff to dec');
+		if (r.ok && r.multi) expect(r.multi[0].value).toBe('255');
+	});
+});
+
 describe('plain math', () => {
 	it('1250 * 1.08', async () => {
 		const r = await run('1250 * 1.08');

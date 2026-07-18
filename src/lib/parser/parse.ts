@@ -1,5 +1,7 @@
 import { findUnit, searchUnits, type Category, type UnitRef } from '../registry';
 
+export type BaseTarget = 'dec' | 'hex' | 'bin' | 'oct';
+
 export interface FastConvert {
 	value: number;
 	categoryId: string;
@@ -25,6 +27,8 @@ export type Parsed =
 	| { kind: 'lookup'; query: string; matches: UnitRef[] }
 	| { kind: 'lookup_target'; expr: string; target: string; matches: UnitRef[] }
 	| { kind: 'convert'; expr: string; target: string; fast?: FastConvert }
+	| { kind: 'convert_multi'; expr: string; targets: string[]; fasts: (FastConvert | undefined)[] }
+	| { kind: 'base'; value: number; targets: BaseTarget[] }
 	| { kind: 'expression'; expr: string }
 	| DateMathParsed;
 
@@ -34,6 +38,13 @@ const ARITH_RE = /^[\d\s.,+\-*/^()eE%]+$/;
 function isUnitish(s: string): boolean {
 	if (findUnit(s)) return true;
 	return /^[a-z°µ$€£₹][a-z0-9^/°µ]*(\s*\/\s*[a-z0-9^]+)?$/i.test(s);
+}
+
+/** Split a conversion RHS on commas: "mi, ft, m" -> targets; "mi" -> one target.
+ *  A trailing comma ("mi,") yields one target, so typing the separator doesn't
+ *  break the live result. */
+function splitTargets(s: string): string[] {
+	return s.split(',').map((t) => t.trim()).filter(Boolean);
 }
 
 /** Indian scale words: "2 lakh" -> 200000, "1.5 crore" -> 15000000. */
@@ -101,6 +112,9 @@ export function parse(raw: string): Parsed {
 	const dateMath = detectDateMath(q);
 	if (dateMath) return dateMath;
 
+	const base = detectBase(q);
+	if (base) return base;
+
 	if (NUMBER_RE.test(q)) return { kind: 'number', value: parseFloat(q.replace(/,/g, '')) };
 
 	// Target Autocomplete check: trailing "to/in/as" optionally followed by partial RHS.
@@ -124,18 +138,23 @@ export function parse(raw: string): Parsed {
 		}
 	}
 
-	// find LAST occurrence of a conversion keyword with a unit-ish RHS.
+	// find LAST occurrence of a conversion keyword whose RHS is one unit-ish
+	// token or a comma-separated list of them (multi-target conversions).
 	const kw = /\s(to|in|as)(?=\s)/gi;
 	let match: RegExpExecArray | null;
 	let split: { index: number; length: number } | null = null;
 	while ((match = kw.exec(q))) {
-		const rhs = q.slice(match.index + match[0].length).trim();
-		if (rhs && isUnitish(rhs)) split = { index: match.index, length: match[0].length };
+		const parts = splitTargets(q.slice(match.index + match[0].length));
+		if (parts.length && parts.every(isUnitish)) split = { index: match.index, length: match[0].length };
 	}
 
 	if (split) {
 		const expr = q.slice(0, split.index).trim();
-		const target = q.slice(split.index + split.length).trim();
+		const targets = splitTargets(q.slice(split.index + split.length));
+		if (targets.length > 1) {
+			return { kind: 'convert_multi', expr, targets, fasts: targets.map((t) => detectFast(expr, t)) };
+		}
+		const target = targets[0];
 		const fast = detectFast(expr, target);
 		return { kind: 'convert', expr, target, ...(fast ? { fast } : {}) };
 	}
@@ -162,6 +181,32 @@ function detectFast(expr: string, target: string): FastConvert | undefined {
 		fromId: from.unit.id,
 		toId: to.unit.id
 	};
+}
+
+const BASE_ALIASES: Record<string, BaseTarget> = {
+	dec: 'dec', decimal: 'dec',
+	hex: 'hex', hexadecimal: 'hex',
+	bin: 'bin', binary: 'bin',
+	oct: 'oct', octal: 'oct'
+};
+
+/** Number-base conversions: "0xff to dec", "255 to hex, bin", "0b1010 to hex/dec". */
+function detectBase(q: string): Parsed | null {
+	const m = q.match(/^(0x[0-9a-f]+|0b[01]+|0o[0-7]+|-?\d[\d,]*)\s+(?:to|in|as)\s+(.+)$/i);
+	if (!m) return null;
+	const targets: BaseTarget[] = [];
+	for (const part of m[2].split(/[,/]/)) {
+		const b = BASE_ALIASES[part.trim().toLowerCase()];
+		if (!b) return null; // any non-base target -> not a base conversion
+		if (!targets.includes(b)) targets.push(b);
+	}
+	if (!targets.length) return null;
+
+	// Number() handles the 0x/0b/0o prefixes natively; beyond 2^53 the digits
+	// would silently round, so treat that as unparseable rather than lie.
+	const value = Number(m[1].toLowerCase().replace(/,/g, ''));
+	if (!Number.isSafeInteger(value)) return null;
+	return { kind: 'base', value, targets };
 }
 
 const DATE_KEYWORD_RE = /^(today|tomorrow|yesterday)$/i;
