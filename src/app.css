@@ -170,6 +170,14 @@ body {
 		width: 100%;
 		justify-content: flex-start;
 	}
+	.date-panel .input-row {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 12px;
+	}
+	.date-panel .to-label {
+		display: none;
+	}
 }
 
 /* Date Panel Styles */
