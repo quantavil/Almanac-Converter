@@ -7,6 +7,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import UnitGrid from '$lib/components/UnitGrid.svelte';
 	import DatePanel from '$lib/components/DatePanel.svelte';
+	import BasesPanel from '$lib/components/BasesPanel.svelte';
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
@@ -67,6 +68,8 @@
 <CategoryNav />
 {#if $activeCategory === 'date'}
 	<DatePanel />
+{:else if $activeCategory === 'bases'}
+	<BasesPanel />
 {:else}
 	<UnitGrid categoryId={$activeCategory} />
 {/if}

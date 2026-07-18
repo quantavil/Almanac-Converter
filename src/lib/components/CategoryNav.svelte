@@ -19,6 +19,12 @@
 			</button>
 		{/each}
 		<button
+			class:active={$activeCategory === 'bases'}
+			onclick={() => activeCategory.set('bases')}
+		>
+			Bases
+		</button>
+		<button
 			class:active={$activeCategory === 'date'}
 			onclick={() => activeCategory.set('date')}
 		>
