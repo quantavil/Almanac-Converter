@@ -1,4 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-	<rect width="512" height="512" rx="96" fill="#5b6b4a" />
-	<text x="256" y="368" font-family="Georgia, 'Times New Roman', serif" font-size="340" font-weight="700" fill="#f6f3e9" text-anchor="middle">A</text>
+	<defs>
+		<!-- Background Gradient -->
+		<linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+			<stop offset="0%" stop-color="#5b6b4a" />
+			<stop offset="40%" stop-color="#3c4731" />
+			<stop offset="100%" stop-color="#1e2418" />
+		</linearGradient>
+
+		<!-- Border Gradient (brass bezel look) -->
+		<linearGradient id="borderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+			<stop offset="0%" stop-color="#f3d078" />
+			<stop offset="50%" stop-color="#a87c32" />
+			<stop offset="100%" stop-color="#5e4113" />
+		</linearGradient>
+
+		<!-- Gold/Brass Metallic Gradient -->
+		<linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+			<stop offset="0%" stop-color="#fae2a3" />
+			<stop offset="35%" stop-color="#d59c3f" />
+			<stop offset="70%" stop-color="#b17b27" />
+			<stop offset="100%" stop-color="#7a4f11" />
+		</linearGradient>
+
+		<!-- Clean Cream Gradient -->
+		<linearGradient id="creamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+			<stop offset="0%" stop-color="#ffffff" />
+			<stop offset="100%" stop-color="#f0ebd8" />
+		</linearGradient>
+
+		<!-- Subtle Drop Shadow for 3D depth -->
+		<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+			<feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#070a05" flood-opacity="0.5" />
+		</filter>
+	</defs>
+
+	<!-- Main Badge Background -->
+	<rect x="12" y="12" width="488" height="488" rx="120" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="8" />
+
+	<!-- Scientific/Almanac Instrument Circles -->
+	<circle cx="256" cy="256" r="215" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.25" />
+	<circle cx="256" cy="256" r="200" fill="none" stroke="url(#goldGrad)" stroke-width="3" stroke-dasharray="2, 6" opacity="0.4" />
+	<circle cx="256" cy="256" r="185" fill="none" stroke="url(#goldGrad)" stroke-width="1" opacity="0.15" />
+	
+	<!-- Compass / Astrolabe ticks -->
+	<line x1="256" y1="40" x2="256" y2="472" stroke="url(#goldGrad)" stroke-width="1" stroke-dasharray="3, 10" opacity="0.15" />
+	<line x1="40" y1="256" x2="472" y2="256" stroke="url(#goldGrad)" stroke-width="1" stroke-dasharray="3, 10" opacity="0.15" />
+
+	<!-- Stylized Letter A and Conversion Arrows with Shadow -->
+	<g filter="url(#shadow)">
+		<!-- Outer Outline for the arch of A to separate from background elements -->
+		<path d="M 145 375 L 256 135 L 367 375" stroke="#1d2317" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9" />
+		
+		<!-- Arch of A -->
+		<path d="M 145 375 L 256 135 L 367 375" stroke="url(#creamGrad)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+		
+		<!-- Thin Gold inner line for the legs of A -->
+		<path d="M 145 375 L 256 135 L 367 375" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.8" />
+
+		<!-- Masking outline for the crossbar arrow to pop it in front of the legs of A -->
+		<path d="M 185 265 L 150 290 L 185 315 M 150 290 L 362 290 M 327 265 L 362 290 L 327 315" stroke="#1d2317" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+		<!-- Gold double-headed conversion arrow -->
+		<path d="M 185 265 L 150 290 L 185 315 M 150 290 L 362 290 M 327 265 L 362 290 L 327 315" stroke="url(#goldGrad)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+	</g>
 </svg>
