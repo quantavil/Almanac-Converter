@@ -58,3 +58,45 @@ describe('fast path', () => {
 		if (p.kind === 'convert') expect(p.fast).toBeUndefined();
 	});
 });
+
+describe('date math', () => {
+	it('parses standalone date for weekday info', () => {
+		expect(parse('2026-12-25')).toEqual({
+			kind: 'date_math',
+			subkind: 'weekday',
+			targetDate: '2026-12-25'
+		});
+		expect(parse('today')).toEqual({
+			kind: 'date_math',
+			subkind: 'weekday',
+			targetDate: 'today'
+		});
+	});
+	it('parses date arithmetic (+/-)', () => {
+		expect(parse('today + 45 days')).toEqual({
+			kind: 'date_math',
+			subkind: 'arithmetic',
+			baseDate: 'today',
+			operator: '+',
+			durationVal: 45,
+			durationUnit: 'day'
+		});
+		expect(parse('2026-07-18 - 2 weeks')).toEqual({
+			kind: 'date_math',
+			subkind: 'arithmetic',
+			baseDate: '2026-07-18',
+			operator: '-',
+			durationVal: 2,
+			durationUnit: 'week'
+		});
+	});
+	it('parses date difference (to)', () => {
+		expect(parse('today to 2026-12-25')).toEqual({
+			kind: 'date_math',
+			subkind: 'difference',
+			startDate: 'today',
+			endDate: '2026-12-25'
+		});
+	});
+});
+

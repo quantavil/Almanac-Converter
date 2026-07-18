@@ -18,5 +18,11 @@
 					></span>{/if}
 			</button>
 		{/each}
+		<button
+			class:active={$activeCategory === 'date'}
+			onclick={() => activeCategory.set('date')}
+		>
+			Date
+		</button>
 	</div>
 </nav>

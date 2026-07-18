@@ -6,6 +6,7 @@
 	import PrecisionStepper from '$lib/components/PrecisionStepper.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import UnitGrid from '$lib/components/UnitGrid.svelte';
+	import DatePanel from '$lib/components/DatePanel.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { activeCategory } from '$lib/stores/settings';
@@ -56,6 +57,10 @@
 
 <SmartBar bind:this={smartBar} />
 <CategoryNav />
-<UnitGrid categoryId={$activeCategory} />
+{#if $activeCategory === 'date'}
+	<DatePanel />
+{:else}
+	<UnitGrid categoryId={$activeCategory} />
+{/if}
 <HistoryPanel onrerun={(q) => smartBar?.setQuery(q)} />
 <Toast />

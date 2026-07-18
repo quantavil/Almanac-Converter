@@ -69,6 +69,8 @@ export async function evaluateParsed(
 ): Promise<EvalResult> {
 	if (parsed.kind === 'empty' || parsed.kind === 'lookup')
 		return { ok: false, error: '' };
+	if (parsed.kind === 'date_math')
+		return evaluateDateMath(parsed);
 	if (parsed.kind === 'number')
 		return { ok: true, value: formatNumber(parsed.value, notation, precision), unit: '' };
 
@@ -139,4 +141,80 @@ function friendly(msg: string): string {
 	if (/Units do not match/i.test(msg)) return `Can't convert between those dimensions`;
 	if (/Unexpected/i.test(msg)) return 'Incomplete expression';
 	return msg;
+}
+
+function resolveDate(str: string): Date | null {
+	const clean = str.trim().toLowerCase();
+	const now = new Date();
+	now.setHours(0, 0, 0, 0); // normalize time
+
+	if (clean === 'today') return now;
+	if (clean === 'tomorrow') {
+		now.setDate(now.getDate() + 1);
+		return now;
+	}
+	if (clean === 'yesterday') {
+		now.setDate(now.getDate() - 1);
+		return now;
+	}
+
+	const parsedDate = new Date(str);
+	return isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+function evaluateDateMath(parsed: any): EvalResult {
+	try {
+		if (parsed.subkind === 'weekday') {
+			const d = resolveDate(parsed.targetDate);
+			if (!d) return { ok: false, error: `Invalid date: "${parsed.targetDate}"` };
+			const weekday = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+			return { ok: true, value: weekday, unit: '' };
+		}
+
+		if (parsed.subkind === 'arithmetic') {
+			const base = resolveDate(parsed.baseDate);
+			if (!base) return { ok: false, error: `Invalid date: "${parsed.baseDate}"` };
+			
+			const mult = parsed.operator === '-' ? -1 : 1;
+			const val = parsed.durationVal;
+			const unit = parsed.durationUnit;
+
+			const result = new Date(base);
+			if (unit === 'day') result.setDate(result.getDate() + val * mult);
+			else if (unit === 'week') result.setDate(result.getDate() + val * 7 * mult);
+			else if (unit === 'month') result.setMonth(result.getMonth() + val * mult);
+			else if (unit === 'year') result.setFullYear(result.getFullYear() + val * mult);
+
+			const formatted = result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+			return { ok: true, value: formatted, unit: '' };
+		}
+
+		if (parsed.subkind === 'difference') {
+			const start = resolveDate(parsed.startDate);
+			const end = resolveDate(parsed.endDate);
+			if (!start) return { ok: false, error: `Invalid date: "${parsed.startDate}"` };
+			if (!end) return { ok: false, error: `Invalid date: "${parsed.endDate}"` };
+
+			const diffMs = end.getTime() - start.getTime();
+			const diffDays = Math.round(diffMs / 86400000);
+			const absDays = Math.abs(diffDays);
+
+			let label = `${absDays} ${absDays === 1 ? 'day' : 'days'}`;
+			if (absDays >= 7) {
+				const weeks = Math.floor(absDays / 7);
+				const remDays = absDays % 7;
+				label += ` (${weeks} ${weeks === 1 ? 'week' : 'weeks'}${remDays > 0 ? `, ${remDays} ${remRemDaysUnit(remDays)}` : ''})`;
+			}
+
+			return { ok: true, value: diffDays < 0 ? `-${label}` : label, unit: '' };
+		}
+
+		return { ok: false, error: 'Unknown date math operation' };
+	} catch (e) {
+		return { ok: false, error: (e as Error).message };
+	}
+}
+
+function remRemDaysUnit(remDays: number): string {
+	return remDays === 1 ? 'day' : 'days';
 }

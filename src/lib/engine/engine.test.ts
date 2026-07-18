@@ -97,3 +97,37 @@ describe('errors are typed and friendly', () => {
 		expect(r.ok).toBe(false);
 	});
 });
+
+describe('date math engine', () => {
+	it('standalone date to weekday', async () => {
+		const r = await run('2026-12-25');
+		expect(r.ok).toBe(true);
+		if (r.ok) {
+			expect(r.value).toContain('Friday');
+			expect(r.value).toContain('December 25, 2026');
+		}
+	});
+	it('date arithmetic (+/-)', async () => {
+		const r1 = await run('2026-07-18 + 45 days');
+		expect(r1.ok).toBe(true);
+		if (r1.ok) {
+			expect(r1.value).toContain('Tuesday');
+			expect(r1.value).toContain('September 1, 2026');
+		}
+
+		const r2 = await run('2026-07-18 - 3 weeks');
+		expect(r2.ok).toBe(true);
+		if (r2.ok) {
+			expect(r2.value).toContain('Saturday');
+			expect(r2.value).toContain('June 27, 2026');
+		}
+	});
+	it('date difference (to)', async () => {
+		const r = await run('2026-07-18 to 2026-09-01');
+		expect(r.ok).toBe(true);
+		if (r.ok) {
+			expect(r.value).toBe('45 days (6 weeks, 3 days)');
+		}
+	});
+});
+
