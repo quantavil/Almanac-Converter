@@ -40,10 +40,8 @@
 	}}
 	role="button"
 	tabindex="0"
-	title="Click to copy"
 >
 	<div class="big"><span class="num">{value}</span>{#if unit}&nbsp;{unit}{/if}</div>
-	<div class="hint">Enter or click to copy</div>
 	{#if siblings.length}
 		<div class="siblings">
 			{#each siblings as s}

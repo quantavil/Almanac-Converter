@@ -87,11 +87,10 @@ body {
 
 /* Result card */
 .result-card { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--sage);
-	border-radius: 6px; padding: 16px 18px; margin-top: 10px; cursor: copy; }
+	border-radius: 6px; padding: 16px 18px; margin-top: 10px; cursor: pointer; }
 .result-card .big { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.1;
 	font-variant-numeric: lining-nums; }
 .result-card .big .num { color: var(--rust); }
-.result-card .hint { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink-soft); margin-top: 6px; }
 .result-card .siblings { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .result-card .sib { background: var(--paper); border: 1px solid var(--line); border-radius: 4px;
 	padding: 4px 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
