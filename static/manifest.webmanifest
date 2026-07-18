@@ -1,0 +1,14 @@
+{
+	"name": "Almanac Converter",
+	"short_name": "Almanac",
+	"description": "Smart unit converter, live currency, and unit-aware calculator.",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#f6f3e9",
+	"theme_color": "#5b6b4a",
+	"icons": [
+		{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+		{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+	]
+}
