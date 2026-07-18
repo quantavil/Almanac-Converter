@@ -132,7 +132,7 @@
 				minute: '2-digit',
 				hour12: true
 			});
-		} catch (e) {
+		} catch {
 			return 'Conversion Error';
 		}
 	});

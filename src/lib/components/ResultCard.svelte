@@ -31,7 +31,7 @@
 	});
 
 	let indianLabel = $derived.by(() => {
-		if (unit !== 'INR' && unit !== '₹' && unit !== 'Rs') return '';
+		if (unit !== 'INR') return '';
 		const numValue = parseFloat(value.replace(/,/g, ''));
 		if (!Number.isFinite(numValue)) return '';
 		const absVal = Math.abs(numValue);
