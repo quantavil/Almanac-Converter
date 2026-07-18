@@ -29,8 +29,13 @@ body {
 	border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 22px; }
 .masthead h1 { font-family: var(--serif); font-weight: 700; font-size: 28px; margin: 0; letter-spacing: -0.3px; }
 .masthead .tagline { color: var(--ink-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
-.rates-badge { font-size: 11px; color: var(--ink-soft); }
-.rates-badge.stale { color: var(--rust); }
+
+/* Notation switch (top-right; single button cycles through notations) */
+.notation-switch { display: inline-flex; align-items: center; gap: 6px; align-self: center;
+	background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 5px;
+	padding: 6px 12px; font: 500 12px var(--sans); cursor: pointer; white-space: nowrap; }
+.notation-switch:hover { background: var(--sage); border-color: var(--sage); }
+.notation-switch .ico { font-size: 13px; opacity: 0.8; }
 
 /* Smart bar */
 .smartbar-wrap { position: sticky; top: 0; z-index: 50; background: var(--paper); padding: 8px 0 14px; }
@@ -60,23 +65,12 @@ body {
 .suggestions button:hover { background: var(--paper); }
 .suggestions .cat { color: var(--ink-soft); font-size: 12px; }
 
-/* Controls row: category tabs left, notation toggle right */
-.controls { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
-	flex-wrap: wrap; margin: 26px 0 14px; }
-
 /* Category nav */
+.catnav { margin: 26px 0 14px; }
 .catnav .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .catnav button { background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
 	padding: 6px 12px; font: 500 13px var(--sans); color: var(--ink); cursor: pointer; }
 .catnav button.active { background: var(--sage); border-color: var(--sage); color: var(--panel); }
-
-/* Notation toggle */
-.notation { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
-	flex: none; }
-.notation button { background: var(--panel); border: 0; border-right: 1px solid var(--line);
-	padding: 6px 11px; font: 500 12px var(--sans); color: var(--ink-soft); cursor: pointer; }
-.notation button:last-child { border-right: 0; }
-.notation button.active { background: var(--ink); color: var(--paper); }
 
 /* Unit grid */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }

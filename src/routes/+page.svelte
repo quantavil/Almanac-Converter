@@ -7,7 +7,6 @@
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { activeCategory } from '$lib/stores/settings';
-	import { ratesInfo } from '$lib/stores/rates';
 	import { loadRates } from '$lib/currency/currency';
 	import { loadEngine, injectRates } from '$lib/engine/engine';
 
@@ -17,7 +16,6 @@
 		// engine + rates load in parallel; neither blocks first paint
 		const engineReady = loadEngine();
 		const info = await loadRates(localStorage);
-		ratesInfo.set(info);
 		await engineReady;
 		injectRates(info.rates);
 	});
@@ -28,18 +26,11 @@
 		<h1>Almanac Converter</h1>
 		<div class="tagline">Units · Currency · Calculation</div>
 	</div>
-	{#if $ratesInfo}
-		<div class="rates-badge" class:stale={$ratesInfo.stale}>
-			rates as of {$ratesInfo.asOf}{$ratesInfo.stale ? ' (offline)' : ''}
-		</div>
-	{/if}
+	<NotationToggle />
 </header>
 
 <SmartBar bind:this={smartBar} />
-<div class="controls">
-	<CategoryNav />
-	<NotationToggle />
-</div>
+<CategoryNav />
 <UnitGrid categoryId={$activeCategory} />
 <HistoryPanel onrerun={(q) => smartBar?.setQuery(q)} />
 <Toast />
