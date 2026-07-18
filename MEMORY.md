@@ -8,12 +8,15 @@ Almanac Converter is a smart unit converter, live currency converter, and unit-a
 almanac-converter/
 ├── src/
 │   ├── lib/
-│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, etc.)
-│   │   ├── currency/    # Live currency exchange rate loaders and types
-│   │   ├── engine/      # Calculation and parsing engine
+│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, ResultCard, etc.)
+│   │   ├── registry/    # Unit categories + data, findUnit/searchUnits/convert
+│   │   ├── parser/      # parse() — classifies input (convert/expression/lookup/date_math)
+│   │   ├── engine/      # evaluateParsed — registry fast-path + lazy mathjs
+│   │   ├── date/        # Shared date-math (resolveDate, diffDaysLabel, addDuration) for engine + DatePanel
+│   │   ├── currency/    # Live currency exchange rate loaders + bundled fallback
 │   │   ├── stores/      # Svelte stores for settings, history, and rates
-│   │   ├── clipboard.ts # Safe fallback clipboard copy helper
-│   │   ├── format.ts    # Number and unit formatting helpers
+│   │   ├── clipboard.ts # Safe fallback clipboard copy (+ copyWithToast)
+│   │   ├── format.ts    # Number formatting (auto/decimal/indian/scientific/engineering)
 │   ├── routes/          # SvelteKit routing (+page.svelte, +layout.svelte)
 │   ├── app.css          # Main styling sheet with light/dark variables
 │   ├── app.html         # HTML skeleton
@@ -27,14 +30,14 @@ almanac-converter/
 - Adaptive icons using `/icon.svg`.
 
 ## Dependencies & Setup
-- Built with `vite` and `@sveltejs/kit` (adapter-static).
-- Run `npm run dev` to start dev server.
-- Uses `mathjs` for physical conversion and calculation logic.
+- Built with `vite` and `@sveltejs/kit` (adapter-static); Bun is the runtime/package manager.
+- Run `bun run dev` to start the dev server (`bun run test` / `check` / `build`).
+- `mathjs` is lazy-loaded for smart-bar expressions only; the grid and date math need no dependencies.
 
 ## Critical Information
 - Currency conversion relies on stored exchange rates loaded on mount.
 - All 160+ currency rates returned from API are injected into mathjs; conflicting names (like CUP) are registered as uppercase-only.
-- Date calculation (arithmetic, differences, weekdays) is handled entirely in vanilla JS (no external packages like moment) for light bundle footprint. A custom DatePanel.svelte renders the graphical Date tab.
+- Date logic (arithmetic, differences, weekdays, timezone conversion, Unix-epoch ↔ calendar) is vanilla JS — no moment/date-fns. The smart bar (engine.ts) and the graphical Date tab (DatePanel.svelte) share one helper, `lib/date/datemath.ts`, so they can't drift. Timezone offsets come from `Intl.DateTimeFormat`; epoch and calendar fields round-trip in UTC.
 
 ## Insights
 - `loadEngine` and `loadRates` run asynchronously and in parallel, and don't block the first paint.
