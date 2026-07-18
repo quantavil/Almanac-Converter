@@ -62,11 +62,27 @@ describe('plain math', () => {
 });
 
 describe('rate injection safety', () => {
-	it('ignores unsupported API codes that collide with mathjs units (CUP vs cup)', async () => {
-		injectRates({ USD: 1, INR: 83, CUP: 24, TRY: 33, ALL: 92 });
-		const r = await run('1 cup + 2 floz in ml');
-		expect(r.ok).toBe(true);
-		if (r.ok) expect(parseFloat(r.value)).toBeCloseTo(295.735, 2);
+	it('registers CUP without overriding lowercase cup volume unit, and allows uppercase CUP currency conversion', async () => {
+		injectRates({ USD: 1, INR: 83, CUP: 24, AFN: 92 });
+		
+		// 1. Lowercase cup still evaluates to volume
+		const rVol = await run('1 cup + 2 floz in ml');
+		expect(rVol.ok).toBe(true);
+		if (rVol.ok) expect(parseFloat(rVol.value)).toBeCloseTo(295.735, 2);
+		
+		// 2. Uppercase CUP evaluates to Cuban Peso currency conversion
+		const rCurr = await run('100 CUP to USD');
+		expect(rCurr.ok).toBe(true);
+		if (rCurr.ok) expect(parseFloat(rCurr.value)).toBeCloseTo(100 / 24, 2);
+
+		// 3. Lowercase cup to USD fails with mismatch (volume can't convert to USD)
+		const rFail = await run('100 cup to USD');
+		expect(rFail.ok).toBe(false);
+
+		// 4. Non-UI currency lowercase alias registers successfully if not colliding (AFN/afn)
+		const rAfn = await run('100 afn to USD');
+		expect(rAfn.ok).toBe(true);
+		if (rAfn.ok) expect(parseFloat(rAfn.value)).toBeCloseTo(100 / 92, 2);
 	});
 });
 

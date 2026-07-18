@@ -45,14 +45,13 @@ export function loadEngine(): Promise<void> {
 /** rates: currency code -> units per USD. Also updates the registry factors. */
 export function injectRates(rates: Record<string, number>): void {
 	if (!math) throw new Error('engine not loaded');
-	// only inject currencies we actually support — the API returns ~160 codes and
-	// some collide with mathjs unit names (CUP = Cuban Peso vs cup the volume unit)
-	const supported = new Set(categories.currency.units.map((u) => u.symbol));
 	for (const [code, perUsd] of Object.entries(rates)) {
-		if (code === 'USD' || !perUsd || !supported.has(code)) continue;
+		if (code === 'USD' || !perUsd) continue;
+		const lcode = code.toLowerCase();
+		const isReserved = lcode in math || math.Unit.isValuelessUnit(lcode);
 		math.createUnit(
 			code,
-			{ definition: `${1 / perUsd} USD`, aliases: [code.toLowerCase()] },
+			{ definition: `${1 / perUsd} USD`, aliases: isReserved ? [] : [lcode] },
 			{ override: true }
 		);
 	}

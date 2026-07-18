@@ -33,6 +33,7 @@ almanac-converter/
 
 ## Critical Information
 - Currency conversion relies on stored exchange rates loaded on mount.
+- All 160+ currency rates returned from API are injected into mathjs; conflicting names (like CUP) are registered as uppercase-only.
 
 ## Insights
 - `loadEngine` and `loadRates` run asynchronously and in parallel, and don't block the first paint.
