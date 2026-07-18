@@ -7,6 +7,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import UnitGrid from '$lib/components/UnitGrid.svelte';
 	import DatePanel from '$lib/components/DatePanel.svelte';
+	import HelpModal from '$lib/components/HelpModal.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { activeCategory } from '$lib/stores/settings';
@@ -15,6 +16,7 @@
 	import { loadEngine, injectRates } from '$lib/engine/engine';
 
 	let smartBar = $state<SmartBar | null>(null);
+	let showHelp = $state(false);
 
 	onMount(() => {
 		// engine + rates load in parallel; neither blocks first paint
@@ -52,6 +54,7 @@
 		<ThemeToggle />
 		<PrecisionStepper />
 		<NotationToggle />
+		<button class="help-btn" onclick={() => showHelp = true} aria-label="Show help guide">?</button>
 	</div>
 </header>
 
@@ -64,3 +67,5 @@
 {/if}
 <HistoryPanel onrerun={(q) => smartBar?.setQuery(q)} />
 <Toast />
+
+<HelpModal bind:isOpen={showHelp} onselect={(code) => smartBar?.setQuery(code)} />
