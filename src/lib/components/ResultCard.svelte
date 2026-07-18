@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { categories, convert } from '$lib/registry';
-	import { formatSigFigs } from '$lib/format';
+	import { formatNumber } from '$lib/format';
+	import { notation } from '$lib/stores/settings';
 
 	let {
 		value,
@@ -23,7 +24,7 @@
 			.slice(0, 4)
 			.map((u) => ({
 				symbol: u.symbol,
-				value: formatSigFigs(convert(fast.raw, fast.categoryId, fast.toId, u.id))
+				value: formatNumber(convert(fast.raw, fast.categoryId, fast.toId, u.id), $notation)
 			}));
 	});
 </script>

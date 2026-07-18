@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { parse, type Parsed } from '$lib/parser/parse';
 	import { evaluateParsed, type EvalResult } from '$lib/engine/engine';
 	import { recordHistory } from '$lib/stores/history';
 	import { showToast } from '$lib/stores/toast';
-	import { activeCategory } from '$lib/stores/settings';
+	import { activeCategory, notation } from '$lib/stores/settings';
 	import ResultCard from './ResultCard.svelte';
 	import Suggestions from './Suggestions.svelte';
 
@@ -20,9 +20,18 @@
 			result = null;
 			return;
 		}
-		const r = await evaluateParsed(parsed);
+		const r = await evaluateParsed(parsed, $notation);
 		if (my === seq) result = r;
 	}
+
+	// re-render the current result when the notation toggle changes.
+	// untrack: run() reads and writes `parsed`/`result` — tracking them would loop.
+	$effect(() => {
+		$notation;
+		untrack(() => {
+			if (query) run(query);
+		});
+	});
 
 	function onInput(e: Event) {
 		query = (e.currentTarget as HTMLInputElement).value;

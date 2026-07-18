@@ -1,26 +1,40 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { categories, convert } from '$lib/registry';
-	import { formatSigFigs } from '$lib/format';
+	import { formatNumber } from '$lib/format';
 	import { showToast } from '$lib/stores/toast';
+	import { notation } from '$lib/stores/settings';
 
 	let { categoryId }: { categoryId: string } = $props();
 	let category = $derived(categories[categoryId]);
 	let values = $state<Record<string, string>>({});
 	let sourceId = $state<string | null>(null);
+	let sourceRaw = ''; // last typed text, for notation re-renders
 
 	$effect(() => {
 		categoryId; // reset when category changes
 		values = {};
 		sourceId = null;
+		sourceRaw = '';
+	});
+
+	// re-render computed cells when the notation toggle changes
+	$effect(() => {
+		$notation;
+		untrack(() => {
+			if (sourceId && sourceRaw) onInput(sourceId, sourceRaw);
+		});
 	});
 
 	function onInput(unitId: string, raw: string) {
 		sourceId = unitId;
+		sourceRaw = raw;
 		const v = parseFloat(raw);
 		const next: Record<string, string> = { [unitId]: raw };
 		if (raw.trim() !== '' && !Number.isNaN(v)) {
 			for (const u of category.units) {
-				if (u.id !== unitId) next[u.id] = formatSigFigs(convert(v, categoryId, unitId, u.id));
+				if (u.id !== unitId)
+					next[u.id] = formatNumber(convert(v, categoryId, unitId, u.id), $notation);
 			}
 		}
 		values = next;

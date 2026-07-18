@@ -1,5 +1,5 @@
 import { categories, convert, findUnit } from '../registry';
-import { formatSigFigs } from '../format';
+import { formatNumber, type Notation } from '../format';
 import type { Parsed } from '../parser/parse';
 
 export type EvalResult =
@@ -56,11 +56,11 @@ export function injectRates(rates: Record<string, number>): void {
 	}
 }
 
-export async function evaluateParsed(parsed: Parsed): Promise<EvalResult> {
+export async function evaluateParsed(parsed: Parsed, notation: Notation = 'auto'): Promise<EvalResult> {
 	if (parsed.kind === 'empty' || parsed.kind === 'lookup')
 		return { ok: false, error: '' };
 	if (parsed.kind === 'number')
-		return { ok: true, value: formatSigFigs(parsed.value), unit: '' };
+		return { ok: true, value: formatNumber(parsed.value, notation), unit: '' };
 
 	// registry fast path — instant, no mathjs needed
 	if (parsed.kind === 'convert' && parsed.fast) {
@@ -68,7 +68,7 @@ export async function evaluateParsed(parsed: Parsed): Promise<EvalResult> {
 		const raw = convert(value, categoryId, fromId, toId);
 		const to = categories[categoryId].units.find((x) => x.id === toId)!;
 		if (!Number.isFinite(raw)) return { ok: false, error: 'Undefined for this value' };
-		return { ok: true, value: formatSigFigs(raw), unit: to.symbol, fast: { categoryId, toId, raw } };
+		return { ok: true, value: formatNumber(raw, notation), unit: to.symbol, fast: { categoryId, toId, raw } };
 	}
 
 	// registryOnly targets can't go to mathjs
@@ -82,12 +82,14 @@ export async function evaluateParsed(parsed: Parsed): Promise<EvalResult> {
 	const expr = parsed.kind === 'convert' ? `(${parsed.expr}) to (${parsed.target})` : parsed.expr;
 	try {
 		const r = math!.evaluate(normalizeForMath(expr));
-		if (typeof r === 'number') return { ok: true, value: formatSigFigs(r), unit: '' };
+		if (typeof r === 'number') return { ok: true, value: formatNumber(r, notation), unit: '' };
 		const formatted: string = math!.format(r, { precision: 6 });
 		const sp = formatted.indexOf(' ');
-		return sp === -1
-			? { ok: true, value: formatted, unit: '' }
-			: { ok: true, value: formatted.slice(0, sp), unit: formatted.slice(sp + 1) };
+		const valStr = sp === -1 ? formatted : formatted.slice(0, sp);
+		const unit = sp === -1 ? '' : formatted.slice(sp + 1);
+		// re-render the numeric part in the chosen notation when it parses cleanly
+		const num = Number(valStr);
+		return { ok: true, value: Number.isFinite(num) ? formatNumber(num, notation) : valStr, unit };
 	} catch (e) {
 		return { ok: false, error: friendly((e as Error).message) };
 	}

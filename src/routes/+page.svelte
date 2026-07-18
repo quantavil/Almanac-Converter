@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import SmartBar from '$lib/components/SmartBar.svelte';
 	import CategoryNav from '$lib/components/CategoryNav.svelte';
+	import NotationToggle from '$lib/components/NotationToggle.svelte';
 	import UnitGrid from '$lib/components/UnitGrid.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
@@ -35,7 +36,10 @@
 </header>
 
 <SmartBar bind:this={smartBar} />
-<CategoryNav />
+<div class="controls">
+	<CategoryNav />
+	<NotationToggle />
+</div>
 <UnitGrid categoryId={$activeCategory} />
 <HistoryPanel onrerun={(q) => smartBar?.setQuery(q)} />
 <Toast />

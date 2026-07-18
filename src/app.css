@@ -60,14 +60,23 @@ body {
 .suggestions button:hover { background: var(--paper); }
 .suggestions .cat { color: var(--ink-soft); font-size: 12px; }
 
+/* Controls row: category tabs left, notation toggle right */
+.controls { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+	flex-wrap: wrap; margin: 26px 0 14px; }
+
 /* Category nav */
-.catnav { margin: 26px 0 14px; }
-.catnav .group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--sage);
-	margin: 10px 0 6px; font-weight: 600; }
 .catnav .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .catnav button { background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
 	padding: 6px 12px; font: 500 13px var(--sans); color: var(--ink); cursor: pointer; }
 .catnav button.active { background: var(--sage); border-color: var(--sage); color: var(--panel); }
+
+/* Notation toggle */
+.notation { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+	flex: none; }
+.notation button { background: var(--panel); border: 0; border-right: 1px solid var(--line);
+	padding: 6px 11px; font: 500 12px var(--sans); color: var(--ink-soft); cursor: pointer; }
+.notation button:last-child { border-right: 0; }
+.notation button.active { background: var(--ink); color: var(--paper); }
 
 /* Unit grid */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
