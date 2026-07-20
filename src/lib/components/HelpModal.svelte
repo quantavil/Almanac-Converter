@@ -32,6 +32,14 @@
 			]
 		},
 		{
+			title: 'Numerals',
+			items: [
+				{ label: 'Number to words', code: '1234 to words' },
+				{ label: 'Number to Roman', code: '2026 to roman' },
+				{ label: 'Roman to number', code: 'mcmxcix to number' }
+			]
+		},
+		{
 			title: 'Math Expressions & Units',
 			items: [
 				{ label: 'Combined Units', code: '5 ft + 10 in in cm' },

@@ -200,6 +200,27 @@ describe('base conversion parsing', () => {
 	});
 });
 
+describe('numeral parsing', () => {
+	it('number to words and roman', () => {
+		expect(parse('1234 to words')).toEqual({ kind: 'numeral', to: 'words', n: 1234 });
+		expect(parse('2026 in roman')).toEqual({ kind: 'numeral', to: 'roman', n: 2026 });
+	});
+	it('roman to number', () => {
+		expect(parse('mcmxcix to number')).toEqual({ kind: 'numeral', to: 'number', n: 1999 });
+		expect(parse('MMXXVI to arabic')).toEqual({ kind: 'numeral', to: 'number', n: 2026 });
+	});
+	it('roman to words (left side may be a roman numeral)', () => {
+		expect(parse('MMXX to words')).toEqual({ kind: 'numeral', to: 'words', n: 2020 });
+	});
+	it('expands Indian scale words before spelling out', () => {
+		expect(parse('2 lakh to words')).toEqual({ kind: 'numeral', to: 'words', n: 200000 });
+	});
+	it('non-integer or non-roman inputs are not numerals', () => {
+		expect(parse('1.5 to words').kind).not.toBe('numeral');
+		expect(parse('5 km to words').kind).not.toBe('numeral');
+	});
+});
+
 describe('target autocomplete parsing', () => {
 	it('detects empty target autocomplete and retrieves same-category matches', () => {
 		const p = parse('12 km to ');

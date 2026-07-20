@@ -2,6 +2,7 @@ import { categories, convert, findUnit } from '../registry';
 import { formatNumber, type Notation } from '../format';
 import type { BaseTarget, DateMathParsed, Parsed } from '../parser/parse';
 import { addDuration, diffDaysLabel, formatLongDate, resolveDate } from '../date/datemath';
+import { toWordsEn, toRoman } from '../numerals/numerals';
 
 export interface MultiRow { value: string; unit?: string; error?: string }
 
@@ -85,6 +86,8 @@ export async function evaluateParsed(
 
 	if (parsed.kind === 'base') return evaluateBase(parsed.value, parsed.targets);
 
+	if (parsed.kind === 'numeral') return evaluateNumeral(parsed);
+
 	if (parsed.kind === 'convert_multi') {
 		const results: EvalResult[] = [];
 		for (let i = 0; i < parsed.targets.length; i++) {
@@ -156,6 +159,17 @@ async function evalMath(
 	} catch (e) {
 		return { ok: false, error: friendly((e as Error).message) };
 	}
+}
+
+function evaluateNumeral(p: Extract<Parsed, { kind: 'numeral' }>): EvalResult {
+	if (p.to === 'number') return { ok: true, value: String(p.n), unit: '' };
+	if (p.to === 'roman') {
+		const r = toRoman(p.n);
+		return r ? { ok: true, value: r, unit: '' } : { ok: false, error: 'Roman numerals cover 1–3999' };
+	}
+	// to words (English; the Numerals tab also shows the Indian lakh/crore spelling)
+	const en = toWordsEn(p.n);
+	return en ? { ok: true, value: en, unit: '' } : { ok: false, error: 'Number too large to spell out' };
 }
 
 function evaluateBase(value: number, targets: BaseTarget[]): EvalResult {

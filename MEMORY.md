@@ -8,10 +8,12 @@ Almanac Converter is a smart unit converter, live currency converter, and unit-a
 almanac-converter/
 ├── src/
 │   ├── lib/
-│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, BasesPanel, ResultCard, etc.)
+│   │   ├── components/  # Svelte UI components (SmartBar, UnitGrid, CategoryNav, DatePanel, BasesPanel, NumeralsPanel, EncodePanel, ResultCard, etc.)
 │   │   ├── registry/    # Unit categories + data, findUnit/searchUnits/convert
-│   │   ├── parser/      # parse() — classifies input (convert/expression/lookup/date_math)
-│   │   ├── engine/      # evaluateParsed — registry fast-path + lazy mathjs
+│   │   ├── parser/      # parse() — classifies input (convert/expression/lookup/date_math/base/numeral)
+│   │   ├── engine/      # evaluateParsed — registry fast-path + lazy mathjs; also base + numeral eval
+│   │   ├── numerals/    # Integer ↔ words (English + Indian lakh/crore) and Roman numerals (pure TS)
+│   │   ├── encode/      # Text ↔ Base64 / URL-encoding / hex (Unicode-safe via TextEncoder)
 │   │   ├── date/        # Shared date-math (resolveDate, diffDaysLabel, addDuration) for engine + DatePanel
 │   │   ├── currency/    # Live currency exchange rate loaders + bundled fallback
 │   │   ├── stores/      # Svelte stores for settings, history, and rates

@@ -193,7 +193,7 @@
 				}}
 			/>
 		{:else if result?.ok}
-			<ResultCard value={result.value} unit={result.unit} multi={result.multi} fast={result.fast} oncopy={copyResult} onswap={swap} />
+			<ResultCard value={result.value} unit={result.unit} multi={result.multi} fast={result.fast} oncopy={copyResult} onswap={parsed.kind === 'convert' ? swap : undefined} />
 		{:else if result && !result.ok && result.error}
 			<div class="result-error">{result.error}</div>
 		{/if}

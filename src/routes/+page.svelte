@@ -8,6 +8,8 @@
 	import UnitGrid from '$lib/components/UnitGrid.svelte';
 	import DatePanel from '$lib/components/DatePanel.svelte';
 	import BasesPanel from '$lib/components/BasesPanel.svelte';
+	import NumeralsPanel from '$lib/components/NumeralsPanel.svelte';
+	import EncodePanel from '$lib/components/EncodePanel.svelte';
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import Toast from '$lib/components/Toast.svelte';
@@ -70,6 +72,10 @@
 	<DatePanel />
 {:else if $activeCategory === 'bases'}
 	<BasesPanel />
+{:else if $activeCategory === 'numerals'}
+	<NumeralsPanel />
+{:else if $activeCategory === 'encode'}
+	<EncodePanel />
 {:else}
 	<UnitGrid categoryId={$activeCategory} />
 {/if}

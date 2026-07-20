@@ -13,6 +13,11 @@ statically prerendered, installable PWA with no backend.
   unit algebra through the lazy math engine.
 - **Multi-target** — `10 km to mi, ft, m` stacks every target in one card.
 - **Number bases** — `255 to hex, bin, oct`, `0xff to dec`, `0b1010 to hex/dec`.
+- **Numerals** — integer ↔ words (English and Indian lakh/crore) and Roman
+  numerals (1–3999) in a cross-filling tab; also in the smart bar via
+  `1234 to words`, `2026 to roman`, `mcmxcix to number`.
+- **Encode tab** — text ↔ Base64, URL-encoding, and hex, Unicode-safe (emoji
+  round-trip); edit any cell to decode and re-derive the rest.
 - **Type-once-fill-all grid** — 16 categories including regional units
   (bigha, tola, gaj, maund…). Pin favourites to the top.
 - **Live currency** — 35 currencies in the grid (160+ recognised in the smart

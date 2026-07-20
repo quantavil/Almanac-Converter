@@ -1,4 +1,5 @@
 import { findUnit, searchUnits, type Category, type UnitRef } from '../registry';
+import { fromRoman } from '../numerals/numerals';
 
 export type BaseTarget = 'dec' | 'hex' | 'bin' | 'oct';
 
@@ -29,6 +30,7 @@ export type Parsed =
 	| { kind: 'convert'; expr: string; target: string; fast?: FastConvert }
 	| { kind: 'convert_multi'; expr: string; targets: string[]; fasts: (FastConvert | undefined)[] }
 	| { kind: 'base'; value: number; targets: BaseTarget[] }
+	| { kind: 'numeral'; to: 'words' | 'roman' | 'number'; n: number }
 	| { kind: 'expression'; expr: string }
 	| DateMathParsed;
 
@@ -114,6 +116,9 @@ export function parse(raw: string): Parsed {
 
 	const base = detectBase(q);
 	if (base) return base;
+
+	const numeral = detectNumeral(q);
+	if (numeral) return numeral;
 
 	if (NUMBER_RE.test(q)) return { kind: 'number', value: parseFloat(q.replace(/,/g, '')) };
 
@@ -207,6 +212,28 @@ function detectBase(q: string): Parsed | null {
 	const value = Number(m[1].toLowerCase().replace(/,/g, ''));
 	if (!Number.isSafeInteger(value)) return null;
 	return { kind: 'base', value, targets };
+}
+
+const INTEGER_RE = /^-?\d[\d,]*$/;
+const ROMAN_RE = /^[mdclxvi]+$/i;
+
+function toStrictInt(s: string): number | null {
+	if (!INTEGER_RE.test(s)) return null;
+	const n = parseInt(s.replace(/,/g, ''), 10);
+	return Number.isSafeInteger(n) ? n : null;
+}
+
+/** Numeral conversions: "1234 to words", "2026 to roman", "mcmxcix to number".
+ *  The left side may be digits or a Roman numeral; the target picks the output. */
+function detectNumeral(q: string): Parsed | null {
+	const m = q.match(/^(.+?)\s+(?:to|in)\s+(words?|roman|numbers?|arabic)$/i);
+	if (!m) return null;
+	const lhs = m[1].trim();
+	const tgt = m[2].toLowerCase();
+	const to = tgt.startsWith('word') ? 'words' : tgt === 'roman' ? 'roman' : 'number';
+
+	const n = toStrictInt(lhs) ?? (ROMAN_RE.test(lhs) ? fromRoman(lhs) : null);
+	return n === null ? null : { kind: 'numeral', to, n };
 }
 
 const DATE_KEYWORD_RE = /^(today|tomorrow|yesterday)$/i;

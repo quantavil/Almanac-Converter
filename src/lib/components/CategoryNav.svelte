@@ -25,6 +25,18 @@
 			Bases
 		</button>
 		<button
+			class:active={$activeCategory === 'numerals'}
+			onclick={() => activeCategory.set('numerals')}
+		>
+			Numerals
+		</button>
+		<button
+			class:active={$activeCategory === 'encode'}
+			onclick={() => activeCategory.set('encode')}
+		>
+			Encode
+		</button>
+		<button
 			class:active={$activeCategory === 'date'}
 			onclick={() => activeCategory.set('date')}
 		>
