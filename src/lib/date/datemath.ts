@@ -46,9 +46,22 @@ export function resolveDate(str: string): Date | null {
 	const iso = clean.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 	if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
 
+	// validate against the raw string first so garbage ("not a date") is rejected;
+	// V8 would happily read a year out of "not a date 2026" otherwise.
 	const d = new Date(str);
 	if (isNaN(d.getTime())) return null;
-	if (!/\d{4}/.test(str)) d.setFullYear(new Date().getFullYear());
+
+	// year-less strings ("may 5"): re-parse with the current year appended so
+	// "feb 29" lands on Feb 29 in a leap year rather than defaulting to V8's 2001
+	// and rolling over to March 1.
+	if (!/\d{4}/.test(str)) {
+		const withYear = new Date(`${str} ${new Date().getFullYear()}`);
+		if (!isNaN(withYear.getTime())) {
+			withYear.setHours(0, 0, 0, 0);
+			return withYear;
+		}
+		d.setFullYear(new Date().getFullYear());
+	}
 	d.setHours(0, 0, 0, 0);
 	return d;
 }

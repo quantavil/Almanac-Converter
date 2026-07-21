@@ -101,7 +101,9 @@ export const categoryList: Category[] = [
 			u('hr', 'Hour', 'h', 3600, ['hours', 'hrs', 'h']),
 			u('day', 'Day', 'd', 86400, ['days']),
 			u('week', 'Week', 'wk', 604800, ['weeks']),
-			u('year', 'Year', 'yr', 31556952, ['years', 'yrs'])
+			// 365.25 d (Julian) to match mathjs, so the fast path and expression
+			// evaluation of "1 year to s" agree.
+			u('year', 'Year', 'yr', 31557600, ['years', 'yrs'])
 		]
 	},
 	{

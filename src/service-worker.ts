@@ -2,11 +2,11 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
-import { build, files, version } from '$service-worker';
+import { build, files, prerendered, version } from '$service-worker';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 const CACHE = `almanac-cache-${version}`;
-const ASSETS = [...build, ...files];
+const ASSETS = [...build, ...files, ...prerendered];
 
 sw.addEventListener('install', (event) => {
 	event.waitUntil(
@@ -42,7 +42,7 @@ sw.addEventListener('fetch', (event) => {
 			try {
 				return await fetch(event.request);
 			} catch {
-				return cached ?? Response.error();
+				return Response.error();
 			}
 		})()
 	);

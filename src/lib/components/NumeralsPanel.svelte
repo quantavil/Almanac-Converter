@@ -11,7 +11,10 @@
 
 	function onNum(raw: string) {
 		sourceId = 'num';
-		const sanitized = raw.replace(/[^0-9-]/g, '');
+		// only a leading "-" is meaningful; strip any other non-digits so the shown
+		// input can't disagree with the parsed value (e.g. "1-2" -> "12").
+		const neg = raw.startsWith('-');
+		const sanitized = (neg ? '-' : '') + (neg ? raw.slice(1) : raw).replace(/[^0-9]/g, '');
 		numStr = sanitized;
 		if (sanitized === '' || sanitized === '-') {
 			n = null;

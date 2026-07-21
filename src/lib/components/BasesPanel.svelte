@@ -1,111 +1,50 @@
 <script lang="ts">
 	import { copyWithToast } from '$lib/clipboard';
 
-	let values = $state<Record<string, string>>({
-		dec: '',
-		hex: '',
-		bin: '',
-		oct: ''
-	});
+	const BASES: Record<string, { prefix: string; radix: number; junk: RegExp }> = {
+		bin: { prefix: '0b', radix: 2, junk: /[^01]/g },
+		oct: { prefix: '0o', radix: 8, junk: /[^0-7]/g },
+		dec: { prefix: '', radix: 10, junk: /[^0-9]/g },
+		hex: { prefix: '0x', radix: 16, junk: /[^0-9a-fA-F]/g }
+	};
 
+	let values = $state<Record<string, string>>({ dec: '', hex: '', bin: '', oct: '' });
 	let sourceId = $state<string | null>(null);
 
-	function parseToBigInt(val: string, base: string): bigint | null {
-		let clean = val.trim();
-		if (!clean) return null;
-
-		const isNegative = clean.startsWith('-');
-		if (isNegative) {
-			clean = clean.slice(1);
-		}
-
-		// remove prefixes if typed/pasted
-		if (clean.toLowerCase().startsWith('0x')) clean = clean.slice(2);
-		if (clean.toLowerCase().startsWith('0b')) clean = clean.slice(2);
-		if (clean.toLowerCase().startsWith('0o')) clean = clean.slice(2);
-
-		if (!clean) return null;
-
-		let prefix = '';
-		if (base === 'hex') prefix = '0x';
-		else if (base === 'bin') prefix = '0b';
-		else if (base === 'oct') prefix = '0o';
-
-		try {
-			return BigInt((isNegative ? '-' : '') + prefix + clean);
-		} catch {
-			return null;
-		}
+	/** Keep a single leading "-", drop an optional matching prefix, strip anything
+	 *  outside the base's digit set. Guarantees the result parses (or is empty). */
+	function sanitize(id: string, raw: string): string {
+		const { prefix, junk } = BASES[id];
+		const neg = raw.startsWith('-');
+		let body = neg ? raw.slice(1) : raw;
+		if (prefix && body.toLowerCase().startsWith(prefix)) body = body.slice(2);
+		return (neg ? '-' : '') + body.replace(junk, '');
 	}
 
 	function onInput(id: string, raw: string) {
 		sourceId = id;
-		
-		// Sanitize input characters based on base
-		let sanitized = raw;
-		if (id === 'dec') {
-			sanitized = raw.replace(/[^0-9-]/g, '');
-		} else if (id === 'hex') {
-			if (raw.toLowerCase().startsWith('-0x')) {
-				sanitized = '-' + raw.slice(3).replace(/[^0-9a-fA-F]/g, '');
-			} else if (raw.toLowerCase().startsWith('0x')) {
-				sanitized = raw.slice(2).replace(/[^0-9a-fA-F]/g, '');
-			} else {
-				sanitized = raw.replace(/[^0-9a-fA-F-]/g, '');
-			}
-		} else if (id === 'bin') {
-			if (raw.toLowerCase().startsWith('-0b')) {
-				sanitized = '-' + raw.slice(3).replace(/[^01]/g, '');
-			} else if (raw.toLowerCase().startsWith('0b')) {
-				sanitized = raw.slice(2).replace(/[^01]/g, '');
-			} else {
-				sanitized = raw.replace(/[^01-]/g, '');
-			}
-		} else if (id === 'oct') {
-			if (raw.toLowerCase().startsWith('-0o')) {
-				sanitized = '-' + raw.slice(3).replace(/[^0-7]/g, '');
-			} else if (raw.toLowerCase().startsWith('0o')) {
-				sanitized = raw.slice(2).replace(/[^0-7]/g, '');
-			} else {
-				sanitized = raw.replace(/[^0-7-]/g, '');
-			}
-		}
+		const s = sanitize(id, raw);
+		values[id] = s;
 
-		values[id] = sanitized;
-
-		if (sanitized === '' || sanitized === '-') {
-			for (const k of Object.keys(values)) {
-				if (k !== id) values[k] = '';
-			}
+		if (s === '' || s === '-') {
+			for (const k of Object.keys(values)) if (k !== id) values[k] = '';
 			return;
 		}
 
-		const val = parseToBigInt(sanitized, id);
-		if (val !== null) {
-			const isNeg = val < 0n;
-			const absVal = isNeg ? -val : val;
-
-			if (id !== 'dec') values.dec = val.toString(10);
-			if (id !== 'hex') values.hex = (isNeg ? '-' : '') + absVal.toString(16);
-			if (id !== 'bin') values.bin = (isNeg ? '-' : '') + absVal.toString(2);
-			if (id !== 'oct') values.oct = (isNeg ? '-' : '') + absVal.toString(8);
+		// BigInt won't accept a sign in front of a "0x"/"0b"/"0o" prefix, so parse
+		// the magnitude and re-apply the sign ourselves.
+		const neg = s.startsWith('-');
+		const abs = BigInt(BASES[id].prefix + (neg ? s.slice(1) : s));
+		for (const k of Object.keys(BASES)) {
+			if (k !== id) values[k] = (neg ? '-' : '') + abs.toString(BASES[k].radix);
 		}
 	}
 
 	function copyCell(id: string) {
 		const v = values[id];
-		if (!v) return;
-		
-		let prefix = '';
-		if (id === 'hex') prefix = '0x';
-		else if (id === 'bin') prefix = '0b';
-		else if (id === 'oct') prefix = '0o';
-
-		const isNeg = v.startsWith('-');
-		const clean = isNeg ? v.slice(1) : v;
-		
-		const copyText = (isNeg ? '-' : '') + (clean ? prefix + clean : '');
-		copyWithToast(copyText || v);
+		if (!v || v === '-') return;
+		const neg = v.startsWith('-');
+		copyWithToast((neg ? '-' : '') + BASES[id].prefix + (neg ? v.slice(1) : v));
 	}
 </script>
 

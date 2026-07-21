@@ -1,4 +1,4 @@
-import { findUnit, searchUnits, type Category, type UnitRef } from '../registry';
+import { findUnit, searchUnits, type Category, type Unit, type UnitRef } from '../registry';
 import { fromRoman } from '../numerals/numerals';
 
 export type BaseTarget = 'dec' | 'hex' | 'bin' | 'oct';
@@ -49,12 +49,20 @@ function splitTargets(s: string): string[] {
 	return s.split(',').map((t) => t.trim()).filter(Boolean);
 }
 
-/** Indian scale words: "2 lakh" -> 200000, "1.5 crore" -> 15000000. */
+/** Indian scale words: "2 lakh" -> 200000, "1.5 crore" -> 15000000. Runs until
+ *  stable so compounds like "5 lakh crore" (5e12) fold one scale at a time. */
 function expandScaleWords(s: string): string {
-	return s.replace(/(-?\d[\d,]*\.?\d*)\s*(lakhs?|lacs?|crores?|cr)\b/gi, (_, num: string, word: string) => {
-		const scale = /^cr/i.test(word) ? 1e7 : 1e5;
-		return String(parseFloat(num.replace(/,/g, '')) * scale);
-	});
+	const re = /(-?\d[\d,]*\.?\d*)\s*(lakhs?|lacs?|crores?|cr)\b/gi;
+	let prev: string;
+	let out = s;
+	do {
+		prev = out;
+		out = out.replace(re, (_, num: string, word: string) => {
+			const scale = /^cr/i.test(word) ? 1e7 : 1e5;
+			return String(parseFloat(num.replace(/,/g, '')) * scale);
+		});
+	} while (out !== prev);
+	return out;
 }
 
 /** "5'10\"" / "5 ft 10 in" / "5 feet 10" -> "5 ft 10 in" for the engine to bridge. */
@@ -78,7 +86,9 @@ function expandPercentages(s: string): string {
 	while (addSubRe.test(res)) {
 		res = res.replace(addSubRe, '($1) * (1 $2 ($3 / 100))');
 	}
-	res = res.replace(/(\d+(?:\.\d+)?)\s*%/g, '($1 / 100)');
+	// bare "N%" -> "(N / 100)", but leave "N % M" alone: there it's the modulo
+	// operator, which mathjs evaluates natively.
+	res = res.replace(/(\d+(?:\.\d+)?)\s*%(?!\s*[\d(])/g, '($1 / 100)');
 	return res;
 }
 
@@ -91,15 +101,19 @@ function findSourceUnit(expr: string): UnitRef | null {
 	return null;
 }
 
-/** Units within one category whose name/symbol/alias contains the partial target. */
-function searchCategoryUnits(category: Category, target: string): UnitRef[] {
+/** Units within one category whose name/symbol/alias contains the partial target,
+ *  excluding `exclude` (the source unit — converting it to itself is a no-op).
+ *  Capped to `limit` so the dropdown and its keyboard nav see the same list. */
+function searchCategoryUnits(category: Category, target: string, exclude: Unit, limit = 5): UnitRef[] {
 	const q = target.trim().toLowerCase();
 	return category.units
 		.filter((unit) => {
+			if (unit === exclude) return false;
 			if (!q) return true;
 			const hay = [unit.name, unit.symbol, unit.id, ...unit.aliases];
 			return hay.some((h) => h.toLowerCase().includes(q));
 		})
+		.slice(0, limit)
 		.map((unit) => ({ category, unit }));
 }
 
@@ -133,7 +147,7 @@ export function parse(raw: string): Parsed {
 			const source = findSourceUnit(expr);
 			let matches: UnitRef[] = [];
 			if (source) {
-				matches = searchCategoryUnits(source.category, target);
+				matches = searchCategoryUnits(source.category, target, source.unit);
 			} else if (target) {
 				matches = searchUnits(target);
 			}
@@ -226,7 +240,7 @@ function toStrictInt(s: string): number | null {
 /** Numeral conversions: "1234 to words", "2026 to roman", "mcmxcix to number".
  *  The left side may be digits or a Roman numeral; the target picks the output. */
 function detectNumeral(q: string): Parsed | null {
-	const m = q.match(/^(.+?)\s+(?:to|in)\s+(words?|roman|numbers?|arabic)$/i);
+	const m = q.match(/^(.+?)\s+(?:to|in|as)\s+(words?|roman|numbers?|arabic)$/i);
 	if (!m) return null;
 	const lhs = m[1].trim();
 	const tgt = m[2].toLowerCase();

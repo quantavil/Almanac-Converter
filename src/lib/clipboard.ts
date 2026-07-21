@@ -9,8 +9,8 @@ export async function copyText(text: string): Promise<boolean> {
 		try {
 			await navigator.clipboard.writeText(text);
 			return true;
-		} catch (err) {
-			// fallback if the promise rejects
+		} catch {
+			// fall through to the textarea fallback if the promise rejects
 		}
 	}
 
@@ -28,7 +28,7 @@ export async function copyText(text: string): Promise<boolean> {
 	let successful = false;
 	try {
 		successful = document.execCommand('copy');
-	} catch (err) {
+	} catch {
 		successful = false;
 	}
 	document.body.removeChild(textArea);

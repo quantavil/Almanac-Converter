@@ -78,38 +78,36 @@
 	let tzSource = $state('local');
 	let tzTarget = $state('UTC');
 
+	// Throws on an invalid timeZone; the caller (tzResult) catches and reports it
+	// rather than silently treating the zone as UTC.
 	function getTzOffset(date: Date, timeZone: string): number {
-		try {
-			const formatter = new Intl.DateTimeFormat('en-US', {
-				timeZone,
-				year: 'numeric', month: 'numeric', day: 'numeric',
-				hour: 'numeric', minute: 'numeric', second: 'numeric',
-				hour12: false
-			});
-			const parts = formatter.formatToParts(date);
-			const getPart = (type: string) => {
-				const p = parts.find(x => x.type === type);
-				return p ? parseInt(p.value) : 0;
-			};
-			const year = getPart('year');
-			const month = getPart('month') - 1;
-			const day = getPart('day');
-			const hour = getPart('hour') === 24 ? 0 : getPart('hour');
-			const minute = getPart('minute');
-			const second = getPart('second');
-			const localTime = Date.UTC(year, month, day, hour, minute, second);
-			const utcTime = Date.UTC(
-				date.getUTCFullYear(),
-				date.getUTCMonth(),
-				date.getUTCDate(),
-				date.getUTCHours(),
-				date.getUTCMinutes(),
-				date.getUTCSeconds()
-			);
-			return localTime - utcTime;
-		} catch {
-			return 0;
-		}
+		const formatter = new Intl.DateTimeFormat('en-US', {
+			timeZone,
+			year: 'numeric', month: 'numeric', day: 'numeric',
+			hour: 'numeric', minute: 'numeric', second: 'numeric',
+			hour12: false
+		});
+		const parts = formatter.formatToParts(date);
+		const getPart = (type: string) => {
+			const p = parts.find(x => x.type === type);
+			return p ? parseInt(p.value) : 0;
+		};
+		const year = getPart('year');
+		const month = getPart('month') - 1;
+		const day = getPart('day');
+		const hour = getPart('hour') === 24 ? 0 : getPart('hour');
+		const minute = getPart('minute');
+		const second = getPart('second');
+		const localTime = Date.UTC(year, month, day, hour, minute, second);
+		const utcTime = Date.UTC(
+			date.getUTCFullYear(),
+			date.getUTCMonth(),
+			date.getUTCDate(),
+			date.getUTCHours(),
+			date.getUTCMinutes(),
+			date.getUTCSeconds()
+		);
+		return localTime - utcTime;
 	}
 
 	const tzResult = $derived.by(() => {

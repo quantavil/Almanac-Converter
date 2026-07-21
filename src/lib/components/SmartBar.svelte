@@ -86,23 +86,14 @@
 
 	function swap() {
 		const p = parsed;
-		if (p.kind !== 'convert') return;
-		if (p.fast) {
-			const cat = categories[p.fast.categoryId];
-			const fromUnit = cat.units.find((u) => u.id === p.fast!.fromId);
-			const toUnit = cat.units.find((u) => u.id === p.fast!.toId);
-			if (fromUnit && toUnit) {
-				query = `${p.fast.value} ${toUnit.symbol} to ${fromUnit.symbol}`;
-				run(query);
-				inputEl?.focus();
-				return;
-			}
-		}
-		const m = p.expr.match(/^(-?[\d,]*\.?\d+)\s*(.+)$/);
-		if (m) {
-			const val = m[1];
-			const fromUnitStr = m[2].trim();
-			query = `${val} ${p.target} to ${fromUnitStr}`;
+		// only fast-path conversions have a clean single from/to pair to flip;
+		// compound sources like "5 ft 10 in" can't be reversed into one unit.
+		if (p.kind !== 'convert' || !p.fast) return;
+		const cat = categories[p.fast.categoryId];
+		const fromUnit = cat.units.find((u) => u.id === p.fast!.fromId);
+		const toUnit = cat.units.find((u) => u.id === p.fast!.toId);
+		if (fromUnit && toUnit) {
+			query = `${p.fast.value} ${toUnit.symbol} to ${fromUnit.symbol}`;
 			run(query);
 			inputEl?.focus();
 		}
@@ -193,7 +184,7 @@
 				}}
 			/>
 		{:else if result?.ok}
-			<ResultCard value={result.value} unit={result.unit} multi={result.multi} fast={result.fast} oncopy={copyResult} onswap={parsed.kind === 'convert' ? swap : undefined} />
+			<ResultCard value={result.value} unit={result.unit} multi={result.multi} fast={result.fast} oncopy={copyResult} onswap={parsed.kind === 'convert' && parsed.fast ? swap : undefined} />
 		{:else if result && !result.ok && result.error}
 			<div class="result-error">{result.error}</div>
 		{/if}
